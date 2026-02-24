@@ -458,52 +458,7 @@
       flex: 1;
     }
 
-    /* ---- Badges Grid ---- */
-    .badges-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      gap: var(--s-3);
-    }
 
-    .fb-badge {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: var(--s-1);
-      padding: var(--s-4) var(--s-2);
-      background: var(--bg-elevated);
-      border: 1px solid var(--border);
-      border-radius: var(--r-lg);
-      text-align: center;
-      transition: all var(--t-base);
-    }
-
-    .fb-badge.earned {
-      border-color: var(--primary-border);
-      background: var(--primary-subtle);
-    }
-
-    .fb-badge.earned:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--primary-glow);
-    }
-
-    .fb-badge-icon {
-      font-size: 1.5rem;
-    }
-
-    .fb-badge-label {
-      font-family: var(--font-display);
-      font-size: 0.7rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-    }
-
-    .fb-badge.locked {
-      opacity: 0.4;
-      filter: grayscale(1);
-    }
 
     /* ---- Leaderboard Preview ---- */
     .lb-row {
@@ -623,9 +578,7 @@
         grid-template-columns: repeat(2, 1fr);
       }
 
-      .badges-grid {
-        grid-template-columns: repeat(3, 1fr);
-      }
+
     }
 
     @media (max-width: 480px) {
@@ -673,7 +626,8 @@
       throw 'User not found';
     }
 
-    const { profile: sportProfile } = SportProfileManager.getProfile(user.id, 'football');
+    const selectedSport = params.get('sport') || user.preferredSport || 'football';
+    const { profile: sportProfile } = SportProfileManager.getProfile(user.id, selectedSport);
     const isMe = me && user.id === me.id;
     const myPitchIds = PitchesStore.filter(p => p.ownerId === user.id).map(p => p.id);
     const bookings = BookingsStore.filter(b => b.playerId === user.id || (user.role === 'pitch_owner' && myPitchIds.includes(b.pitchId)));
@@ -687,16 +641,21 @@
     const skillLvl = SportProfileManager.getSkillLevel(sportProfile?.rating || 3.0);
     const reliability = SportProfileManager.computeReliability(sportProfile || {});
     const reliabilityGrade = SportProfileManager.getReliabilityGrade(reliability);
-    const earnedBadges = sportProfile ? SportProfileManager.getEarnedBadges(sportProfile) : [];
-    const earnedIds = earnedBadges.map(b => b.id);
     const ratingPct = ((sportProfile?.rating || 3.0) / 5) * 100;
     const circumference = 2 * Math.PI * 44; // SVG circle radius 44
     const dashOffset = circumference - (ratingPct / 100) * circumference;
 
+    const viewedSport = selectedSport;
+    const sportInfo = {
+      football: { name: 'Football', icon: '⚽', active: viewedSport === 'football' },
+      padel: { name: 'Padel', icon: '🎾', active: viewedSport === 'padel' },
+      basketball: { name: 'Basketball', icon: '🏀', active: viewedSport === 'basketball' }
+    };
+
     // ---- Leaderboard data ----
-    const topRated = PlayerLeaderboard.getTopPlayers('rating', 5);
-    const topGoals = PlayerLeaderboard.getTopPlayers('goals', 5);
-    const myRank = PlayerLeaderboard.getPlayerRank(user.id, 'rating');
+    const topRated = PlayerLeaderboard.getTopPlayers('rating', 5, viewedSport);
+    const topGoals = PlayerLeaderboard.getTopPlayers('goals', 5, viewedSport);
+    const myRank = PlayerLeaderboard.getPlayerRank(user.id, 'rating', viewedSport);
 
     // ---- Build HTML ----
     let html = '';
@@ -711,6 +670,7 @@
           <div class="profile-meta">${user.email}${user.phone ? ' · ' + user.phone : ''}</div>
           <div class="profile-badges">
             <span class="badge ${roleBadge[user.role]}">${roleLabel[user.role]}</span>
+            <span class="badge badge-accent">🏆 ${sportInfo[viewedSport].icon} ${sportInfo[viewedSport].name}</span>
             <span class="badge badge-neutral">📍 Cairo, Egypt</span>
             <span class="badge badge-neutral">Joined ${formatDate(user.createdAt)}</span>
             ${myRank ? `<span class="badge badge-primary">🏆 Rank #${myRank}</span>` : ''}
@@ -723,17 +683,17 @@
     // ======= SPORT TABS =======
     html += `
     <div class="sport-tabs animate-in animate-delay-1">
-      <button class="sport-tab active" onclick="/* already active */">
+      <button class="sport-tab ${sportInfo.football.active ? 'active' : ''}" onclick="window.location.href='profile.html?id=${user.id}&sport=football'">
         <span class="tab-icon">⚽</span> Football
-        <span class="tab-badge">ACTIVE</span>
+        ${sportInfo.football.active ? '<span class="tab-badge">PRIMARY</span>' : ''}
       </button>
-      <button class="sport-tab disabled" title="Coming soon" disabled>
+      <button class="sport-tab ${sportInfo.padel.active ? 'active' : ''}" onclick="window.location.href='profile.html?id=${user.id}&sport=padel'">
         <span class="tab-icon">🎾</span> Padel
-        <span class="tab-badge">SOON</span>
+        ${sportInfo.padel.active ? '<span class="tab-badge">PRIMARY</span>' : ''}
       </button>
-      <button class="sport-tab disabled" title="Coming soon" disabled>
+      <button class="sport-tab ${sportInfo.basketball.active ? 'active' : ''}" onclick="window.location.href='profile.html?id=${user.id}&sport=basketball'">
         <span class="tab-icon">🏀</span> Basketball
-        <span class="tab-badge">SOON</span>
+        ${sportInfo.basketball.active ? '<span class="tab-badge">PRIMARY</span>' : ''}
       </button>
     </div>`;
 
@@ -882,20 +842,7 @@
         </div>
       </div>`;
 
-    // --- Panel 5: Badges ---
-    html += `
-      <div class="fb-panel">
-        <h3>🏅 Football Badges <span style="font-size:0.75rem;color:var(--text-faint);font-weight:400;margin-left:auto;">${earnedBadges.length}/${FOOTBALL_BADGES.length}</span></h3>
-        <div class="badges-grid">
-          ${FOOTBALL_BADGES.map(b => {
-      const earned = earnedIds.includes(b.id);
-      return `<div class="fb-badge ${earned ? 'earned' : 'locked'}" title="${b.description}">
-              <div class="fb-badge-icon">${b.icon}</div>
-              <div class="fb-badge-label">${b.label}</div>
-            </div>`;
-    }).join('')}
-        </div>
-      </div>`;
+
 
     html += `</div>`; // Close fb-dashboard
 

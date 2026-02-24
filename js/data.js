@@ -133,6 +133,24 @@ function getPlayerAcademyLevel(academyId, playerId) {
     return { points, level, nextLevel, progress, record };
 }
 
+/**
+ * ARCHITECT REQUIREMENT: Coach/Player Contract Rule
+ * Coach can cancel ONLY after 30 days of enrollment.
+ */
+function getContractStatus(enrollment) {
+    if (!enrollment.contractStartDate) return { canCancel: true, daysLeft: 0, diffDays: 31 };
+
+    const start = new Date(enrollment.contractStartDate);
+    const now = new Date();
+    const diffTime = now - start;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    const canCancel = diffDays >= 30;
+    const daysLeft = Math.max(0, 30 - diffDays);
+
+    return { canCancel, daysLeft, diffDays };
+}
+
 function awardAcademyPoints(academyId, playerId, playerName, type, customNote) {
     const pts = ACADEMY_POINTS[type] || 0;
     if (pts === 0) return null;
@@ -147,6 +165,34 @@ function awardAcademyPoints(academyId, playerId, playerName, type, customNote) {
         AcademyPointsStore.add({ academyId, playerId, playerName, points: pts, history: [entry] });
     }
     return pts;
+}
+
+/** 
+ * Check if a player has an active coach booking or academy enrollment.
+ * Used to enforce the one-coach-per-player rule.
+ */
+function hasActiveCoachEnrollment(playerId) {
+    if (!playerId) return false;
+
+    // 1. Check academy enrollments (Active/Approved/Pending)
+    const activeAcademy = AcademyEnrollmentsStore.filter(en =>
+        en.playerId === playerId &&
+        ['active', 'approved', 'pending'].includes(en.status)
+    ).length > 0;
+
+    if (activeAcademy) return true;
+
+    // 2. Check individual coach bookings (Upcoming/Pending)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const activeBooking = CoachBookingsStore.filter(cb =>
+        cb.playerId === playerId &&
+        (cb.status === 'confirmed' || cb.status === 'pending') &&
+        new Date(cb.date) >= today
+    ).length > 0;
+
+    return activeBooking;
 }
 
 // ---- Ranking & Match Results System (NEW) ----
@@ -232,14 +278,14 @@ const SEED_DATA = {
         { id: 'u_coach_3', name: 'Pep Guardiola', email: 'pep@coach.com', password: '123456', role: 'coach', roles: ['coach'], phone: '+20 123 666 777', avatar: '', createdAt: '2026-02-24' }
     ],
     pitches: [
-        { id: 'p1', name: 'Green Arena', location: 'Nasr City, Cairo', pricePerHour: 250, ownerId: 'u4', type: '5-a-side', capacity: 10, amenities: ['Lighting', 'Parking', 'Changing Room'], rating: 4.5, image: '', sport: 'football' },
-        { id: 'p2', name: 'Champions Field', location: '6th October, Giza', pricePerHour: 400, ownerId: 'u4', type: '7-a-side', capacity: 14, amenities: ['Lighting', 'Parking', 'Cafeteria', 'Showers'], rating: 4.8, image: '', sport: 'football' },
-        { id: 'p3', name: 'Goal Zone', location: 'Maadi, Cairo', pricePerHour: 300, ownerId: 'u6', type: '5-a-side', capacity: 10, amenities: ['Lighting', 'Parking'], rating: 4.2, image: '', sport: 'football' },
-        { id: 'p4', name: 'Stadium X', location: 'New Cairo', pricePerHour: 500, ownerId: 'u6', type: '11-a-side', capacity: 22, amenities: ['Lighting', 'Parking', 'VIP', 'Cafeteria'], rating: 4.9, image: '', sport: 'football' },
-        { id: 'p7', name: 'Sky Padel Court', location: 'New Cairo', pricePerHour: 450, ownerId: 'u4', type: 'Outdoor', capacity: 4, amenities: ['Lighting', 'Parking', 'Pro Shop'], rating: 4.9, image: '', sport: 'padel' },
-        { id: 'p8', name: 'Glass Padel Hub', location: 'Zayed, Giza', pricePerHour: 400, ownerId: 'u6', type: 'Indoor', capacity: 4, amenities: ['Lighting', 'AC', 'Showers'], rating: 4.7, image: '', sport: 'padel' },
-        { id: 'p9', name: 'Urban Hoops', location: 'Downtown, Cairo', pricePerHour: 200, ownerId: 'u4', type: 'Full Court', capacity: 10, amenities: ['Lighting'], rating: 4.3, image: '', sport: 'basketball' },
-        { id: 'p10', name: 'The Cage', location: 'Maadi, Cairo', pricePerHour: 180, ownerId: 'u6', type: 'Half Court', capacity: 4, amenities: ['Lighting'], rating: 4.1, image: '', sport: 'basketball' }
+        { id: 'p1', name: 'Green Arena', location: 'Nasr City, Cairo', pricePerHour: 250, ownerId: 'u4', type: '5-a-side', capacity: 10, rating: 4.5, image: '', sport: 'football' },
+        { id: 'p2', name: 'Champions Field', location: '6th October, Giza', pricePerHour: 400, ownerId: 'u4', type: '7-a-side', capacity: 14, rating: 4.8, image: '', sport: 'football' },
+        { id: 'p3', name: 'Goal Zone', location: 'Maadi, Cairo', pricePerHour: 300, ownerId: 'u6', type: '5-a-side', capacity: 10, rating: 4.2, image: '', sport: 'football' },
+        { id: 'p4', name: 'Stadium X', location: 'New Cairo', pricePerHour: 500, ownerId: 'u6', type: '11-a-side', capacity: 22, rating: 4.9, image: '', sport: 'football' },
+        { id: 'p7', name: 'Sky Padel Court', location: 'New Cairo', pricePerHour: 450, ownerId: 'u4', type: 'Outdoor', capacity: 4, rating: 4.9, image: '', sport: 'padel' },
+        { id: 'p8', name: 'Glass Padel Hub', location: 'Zayed, Giza', pricePerHour: 400, ownerId: 'u6', type: 'Indoor', capacity: 4, rating: 4.7, image: '', sport: 'padel' },
+        { id: 'p9', name: 'Urban Hoops', location: 'Downtown, Cairo', pricePerHour: 200, ownerId: 'u4', type: 'Full Court', capacity: 10, rating: 4.3, image: '', sport: 'basketball' },
+        { id: 'p10', name: 'The Cage', location: 'Maadi, Cairo', pricePerHour: 180, ownerId: 'u6', type: 'Half Court', capacity: 4, rating: 4.1, image: '', sport: 'basketball' }
     ],
     coaches: [
         { id: 'c1', userId: 'u5', specialty: 'Attack & Finishing', experience: 12, hourlyRate: 150, rating: 4.7, bio: 'Former professional striker with 12 years of experience.', sport: 'football' },

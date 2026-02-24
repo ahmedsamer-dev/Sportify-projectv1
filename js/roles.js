@@ -276,5 +276,36 @@ const RolesManager = {
             return false;
         }
         return true;
+    },
+
+    /**
+     * ADMIN ONLY: Change the role of a user.
+     * Enforces single role assignment and permission validation.
+     */
+    async changeUserRole(adminUser, targetUserId, newRole) {
+        // Validation: ONLY Admin can change roles
+        if (!adminUser || adminUser.role !== 'admin') {
+            console.error('Unauthorized: Only ADMIN can change user roles.');
+            return { success: false, message: 'Unauthorized' };
+        }
+
+        // Simulate API delay
+        await new Promise(r => setTimeout(r, 500));
+
+        const users = UsersStore.getAll();
+        const userIdx = users.findIndex(u => u.id === targetUserId);
+
+        if (userIdx === -1) {
+            return { success: false, message: 'User not found' };
+        }
+
+        // Update role (Single role assignment)
+        users[userIdx].role = newRole;
+        users[userIdx].roles = [newRole]; // Keep roles array in sync
+
+        // Save to DB
+        localStorage.setItem('mal3abak_users', JSON.stringify(users));
+
+        return { success: true, message: 'Role updated successfully' };
     }
 };

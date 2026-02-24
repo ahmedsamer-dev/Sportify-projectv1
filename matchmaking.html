@@ -174,24 +174,24 @@
         /* ---- Match Chat (NEW) ---- */
         .match-chat-panel {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 350px;
-            height: 450px;
+            top: 0;
+            right: 0;
+            width: 380px;
+            height: 100vh;
             background: var(--bg-card);
-            border: 1px solid var(--border-glow);
-            border-radius: var(--r-xl);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            border-left: 1px solid var(--border-glow);
+            border-radius: 0;
+            box-shadow: -5px 0 30px rgba(0, 0, 0, 0.4);
             display: flex;
             flex-direction: column;
-            z-index: 1000;
-            transform: translateY(calc(100% + 40px));
-            transition: transform 0.4s var(--ease);
+            z-index: 2000;
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             overflow: hidden;
         }
 
         .match-chat-panel.active {
-            transform: translateY(0);
+            transform: translateX(0);
         }
 
         .match-chat-header {
@@ -450,9 +450,9 @@
                              ${isLogged && (match.hostId === user.id || match.creatorId === user.id)
                         ? `<button class="btn btn-danger btn-sm" onclick="cancelMatch('${match.id}')">Cancel Match</button>
                            ${match.status === 'full' && !match.result ? `<button class="btn btn-primary btn-sm" onclick="openResultModal('${match.id}')">Submit Result</button>` : ''}
-                           <button class="btn btn-accent btn-sm" onclick="openMatchChat('${match.id}')">Chat 💬</button>`
+                           <button class="btn btn-accent btn-sm chat-btn" data-match-id="${match.id}">Chat 💬</button>`
                         : isMine
-                            ? `<button class="btn btn-accent btn-sm" onclick="openMatchChat('${match.id}')">Chat 💬</button>
+                            ? `<button class="btn btn-accent btn-sm chat-btn" data-match-id="${match.id}">Chat 💬</button>
                                <button class="btn btn-secondary btn-sm" onclick="leaveMatch('${match.id}')">Leave</button>
                                ${match.resultStatus === 'pending' && !match.result.confirmations.includes(user.id) ? `<button class="btn btn-accent btn-sm" onclick="confirmResult('${match.id}')">Confirm Result ✓</button>` : ''}`
                             : myRequest
@@ -503,12 +503,30 @@
                         <div class="form-group">
                             <label class="form-label" for="mTime">Time *</label>
                             <select class="form-select" id="mTime">
-                                <option value="16:00-17:00">16:00-17:00</option>
-                                <option value="17:00-18:00">17:00-18:00</option>
-                                <option value="18:00-19:00" selected>18:00-19:00</option>
-                                <option value="19:00-20:00">19:00-20:00</option>
-                                <option value="20:00-21:00">20:00-21:00</option>
-                                <option value="21:00-22:00">21:00-22:00</option>
+                                <option value="0:00-1:00">12:00 AM – 1:00 AM</option>
+                                <option value="1:00-2:00">1:00 AM – 2:00 AM</option>
+                                <option value="2:00-3:00">2:00 AM – 3:00 AM</option>
+                                <option value="3:00-4:00">3:00 AM – 4:00 AM</option>
+                                <option value="4:00-5:00">4:00 AM – 5:00 AM</option>
+                                <option value="5:00-6:00">5:00 AM – 6:00 AM</option>
+                                <option value="6:00-7:00">6:00 AM – 7:00 AM</option>
+                                <option value="7:00-8:00">7:00 AM – 8:00 AM</option>
+                                <option value="8:00-9:00">8:00 AM – 9:00 AM</option>
+                                <option value="9:00-10:00">9:00 AM – 10:00 AM</option>
+                                <option value="10:00-11:00">10:00 AM – 11:00 AM</option>
+                                <option value="11:00-12:00">11:00 AM – 12:00 PM</option>
+                                <option value="12:00-13:00">12:00 PM – 1:00 PM</option>
+                                <option value="13:00-14:00">1:00 PM – 2:00 PM</option>
+                                <option value="14:00-15:00">2:00 PM – 3:00 PM</option>
+                                <option value="15:00-16:00">3:00 PM – 4:00 PM</option>
+                                <option value="16:00-17:00">4:00 PM – 5:00 PM</option>
+                                <option value="17:00-18:00">5:00 PM – 6:00 PM</option>
+                                <option value="18:00-19:00" selected>6:00 PM – 7:00 PM</option>
+                                <option value="19:00-20:00">7:00 PM – 8:00 PM</option>
+                                <option value="20:00-21:00">8:00 PM – 9:00 PM</option>
+                                <option value="21:00-22:00">9:00 PM – 10:00 PM</option>
+                                <option value="22:00-23:00">10:00 PM – 11:00 PM</option>
+                                <option value="23:00-0:00">11:00 PM – 12:00 AM</option>
                             </select>
                         </div>
                     </div>
@@ -663,6 +681,16 @@
         renderMatches();
         renderSidebar();
 
+        // ---- DELEGATED CHAT LISTENER (Fix) ----
+        document.addEventListener('click', e => {
+            const btn = e.target.closest('.chat-btn');
+            if (btn) {
+                e.preventDefault();
+                const mid = btn.getAttribute('data-match-id');
+                if (mid) openMatchChat(mid);
+            }
+        });
+
         function handleRequest(matchId, playerId, status) {
             const res = MatchmakingManager.handleRequest(matchId, playerId, status);
             if (res.success) {
@@ -678,7 +706,8 @@
 
         function openMatchChat(matchId) {
             currentChatMatchId = matchId;
-            const match = MatchmakingManager.getMatch(matchId);
+            const match = MatchmakingManager.getById(matchId);
+            if (!match) return;
             document.getElementById('chatTitle').textContent = `Match: ${match.location}`;
             document.getElementById('matchChatPanel').classList.add('active');
             document.getElementById('chatToggle').classList.add('hidden');

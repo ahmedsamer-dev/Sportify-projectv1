@@ -149,16 +149,53 @@
         <div class="stat-card"><div class="stat-icon" style="background:var(--info-subtle);">📋</div><div class="stat-value">${bookings.length}</div><div class="stat-label">Bookings</div></div>
         <div class="stat-card"><div class="stat-icon" style="background:var(--warning-subtle);">💰</div><div class="stat-value">${revenue.toLocaleString()}</div><div class="stat-label">Revenue (EGP)</div></div>`;
 
-            // Users
-            document.getElementById('users').innerHTML = `<div class="table-wrapper"><table>
-        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th></th></tr></thead>
-        <tbody>${users.map(u => `<tr>
-          <td style="font-weight:600;color:var(--text-h);">${u.name}</td>
-          <td>${u.email}</td>
-          <td><span class="badge ${roleBadge[u.role]}">${roleLabel[u.role]}</span></td>
-          <td class="text-faint">${formatDate(u.createdAt)}</td>
-          <td>${u.role !== 'admin' ? `<button class="btn btn-sm btn-ghost" style="color:var(--danger);" onclick="deleteUser('${u.id}')">Delete</button>` : ''}</td>
-        </tr>`).join('')}</tbody></table></div>`;
+            // Users (Admin Role Management Section)
+            document.getElementById('users').innerHTML = `
+                <div class="card mb-6" style="border:1px solid var(--primary-border);">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--s-4);">
+                        <h3 style="margin:0;">User Role Management</h3>
+                        <span class="text-xs text-faint">Only Admins can modify account types</span>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>User Name</th>
+                                    <th>Email</th>
+                                    <th>Current Role</th>
+                                    <th>Change Role</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${users.map(u => {
+                const isAdmin = u.role === 'admin';
+                return `
+                                    <tr>
+                                        <td style="font-weight:600;color:var(--text-h);">${u.name}</td>
+                                        <td>${u.email}</td>
+                                        <td><span class="badge ${roleBadge[u.role] || 'badge-neutral'}">${roleLabel[u.role] || u.role}</span></td>
+                                        <td>
+                                            ${isAdmin ? '<span class="text-xs text-faint">Restricted</span>' : `
+                                            <select class="form-select btn-sm" id="role-select-${u.id}" style="width:140px;padding:4px 8px;font-size:0.75rem;margin:0;">
+                                                <option value="player" ${u.role === 'player' ? 'selected' : ''}>Player</option>
+                                                <option value="coach" ${u.role === 'coach' ? 'selected' : ''}>Coach</option>
+                                                <option value="pitch_owner" ${u.role === 'pitch_owner' ? 'selected' : ''}>Owner</option>
+                                            </select>
+                                            `}
+                                        </td>
+                                        <td>
+                                            <div style="display:flex;gap:var(--s-2);align-items:center;">
+                                                ${!isAdmin ? `<button class="btn btn-primary btn-sm" onclick="saveUserRole('${u.id}')">Save</button>` : ''}
+                                                ${!isAdmin ? `<button class="btn btn-sm btn-ghost" style="color:var(--danger);padding:4px 8px;" onclick="deleteUser('${u.id}')">Delete</button>` : ''}
+                                            </div>
+                                        </td>
+                                    </tr>`;
+            }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
 
             // Pitches
             document.getElementById('pitches').innerHTML = `<div class="table-wrapper"><table>
@@ -213,6 +250,33 @@
           <td><button class="btn btn-sm btn-ghost" style="color:var(--danger);" onclick="deleteVideo('${v.id}')">Remove</button></td>
         </tr>`;
             }).join('')}</tbody></table></div>`;
+        }
+
+        async function saveUserRole(userId) {
+            const select = document.getElementById(`role-select-${userId}`);
+            if (!select) return;
+
+            const newRole = select.value;
+            const adminUser = Auth.getCurrentUser();
+
+            // Permission Check (Safeguard)
+            if (adminUser.role !== 'admin') {
+                showToast('Unauthorized operation', 'error');
+                return;
+            }
+
+            try {
+                const result = await RolesManager.changeUserRole(adminUser, userId, newRole);
+
+                if (result.success) {
+                    showToast(result.message, 'success');
+                    renderAdmin(); // Refresh UI
+                } else {
+                    showToast(result.message, 'error');
+                }
+            } catch (err) {
+                showToast('Role update failed', 'error');
+            }
         }
 
         function deleteUser(id) { if (confirm('Delete this user?')) { UsersStore.delete(id); showToast('User deleted', 'success'); renderAdmin(); } }

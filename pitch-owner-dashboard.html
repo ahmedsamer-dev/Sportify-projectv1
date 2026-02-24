@@ -598,6 +598,14 @@
             // ---- Constants ----
             const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
             const HOURS = [
+                { label: '12:00 AM', h24: 0 },
+                { label: '1:00 AM', h24: 1 },
+                { label: '2:00 AM', h24: 2 },
+                { label: '3:00 AM', h24: 3 },
+                { label: '4:00 AM', h24: 4 },
+                { label: '5:00 AM', h24: 5 },
+                { label: '6:00 AM', h24: 6 },
+                { label: '7:00 AM', h24: 7 },
                 { label: '8:00 AM', h24: 8 },
                 { label: '9:00 AM', h24: 9 },
                 { label: '10:00 AM', h24: 10 },
@@ -715,19 +723,17 @@
                             const slotCount = p.availableSlots ? Object.values(p.availableSlots).filter(Boolean).length : 0;
                             return `
                                 <div class="pitch-manage-card">
-                                    <div class="pitch-manage-icon">⚽</div>
+                                    <div class="pitch-manage-icon">${p.sport === 'basketball' ? '🏀' : p.sport === 'padel' ? '🎾' : '⚽'}</div>
                                     <div class="pitch-manage-info">
                                         <h4>${p.name}</h4>
                                         <div class="text-sm text-faint">${p.location}</div>
                                         <div style="display:flex;gap:var(--s-2);margin-top:var(--s-2);flex-wrap:wrap;">
+                                            <span class="badge badge-accent">${(p.sport || 'football').toUpperCase()}</span>
                                             <span class="badge badge-primary">${p.type}</span>
                                             <span class="badge badge-neutral">${p.capacity} players</span>
                                             <span class="badge badge-neutral">${p.pricePerHour} EGP/hr</span>
                                             ${slotCount > 0 ? `<span class="badge badge-accent">${slotCount} slots</span>` : ''}
                                             ${pitchPending > 0 ? `<span class="badge badge-warning">${pitchPending} pending</span>` : ''}
-                                        </div>
-                                        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:var(--s-2);">
-                                            ${(p.amenities || []).map(a => `<span class="badge badge-neutral" style="font-size:0.7rem;">${a}</span>`).join('')}
                                         </div>
                                     </div>
                                     <div class="pitch-manage-actions">
@@ -756,7 +762,7 @@
                                     <button class="avail-pitch-btn ${i === 0 ? 'active' : ''}" 
                                             onclick="selectAvailPitch('${p.id}', this)"
                                             data-pitch-id="${p.id}">
-                                        ⚽ ${p.name}
+                                        ${p.sport === 'basketball' ? '🏀' : p.sport === 'padel' ? '🎾' : '⚽'} ${p.name}
                                     </button>
                                 `).join('')}
                             </div>
@@ -1067,18 +1073,22 @@
                 }, 200);
             };
 
-            // ---- Add Pitch Modal ----
-            let selectedAmenities = [];
-            const ALL_AMENITIES = ['Lighting', 'Parking', 'Changing Room', 'Showers', 'Cafeteria', 'VIP', 'First Aid', 'WiFi'];
 
             window.openAddPitchModal = function () {
-                selectedAmenities = [];
                 document.getElementById('pitchModalContent').innerHTML = `
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--s-5);">
                         <h3>🏟️ Add New Pitch</h3>
                         <button class="btn btn-ghost btn-sm" onclick="closePitchModal()" style="font-size:1.2rem;">✕</button>
                     </div>
                     <div class="form-section">
+                        <div class="form-group">
+                            <label class="form-label">Sport Type *</label>
+                            <select class="form-select" id="pitchSport" onchange="updatePitchTypeOptions(this.value)">
+                                <option value="football">⚽ Football</option>
+                                <option value="padel">🎾 Padel</option>
+                                <option value="basketball">🏀 Basketball</option>
+                            </select>
+                        </div>
                         <div class="form-group">
                             <label class="form-label">Pitch Name *</label>
                             <input class="form-input" id="pitchName" placeholder="e.g. Green Arena" maxlength="50">
@@ -1089,7 +1099,7 @@
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label class="form-label">Type *</label>
+                                <label class="form-label">Pitch Format *</label>
                                 <select class="form-select" id="pitchType">
                                     <option value="5-a-side">5-a-side</option>
                                     <option value="7-a-side">7-a-side</option>
@@ -1102,16 +1112,8 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Capacity *</label>
-                            <input class="form-input" type="number" id="pitchCapacity" min="4" max="30" placeholder="10">
-                        </div>
-                    </div>
-                    <div class="form-section">
-                        <h4>Amenities</h4>
-                        <div class="amenity-grid" id="amenityGrid">
-                            ${ALL_AMENITIES.map(a => `
-                                <span class="amenity-chip" onclick="toggleAmenity(this, '${a}')">${a}</span>
-                            `).join('')}
+                            <label class="form-label">Player Capacity *</label>
+                            <input class="form-input" type="number" id="pitchCapacity" min="2" max="30" value="10">
                         </div>
                     </div>
                     <button class="btn btn-primary btn-block" onclick="submitPitch()">Publish Pitch</button>
@@ -1119,21 +1121,40 @@
                 document.getElementById('pitchModal').classList.add('active');
             };
 
+            window.updatePitchTypeOptions = function (sport) {
+                const typeSelect = document.getElementById('pitchType');
+                const capInput = document.getElementById('pitchCapacity');
+                typeSelect.innerHTML = '';
+
+                if (sport === 'football') {
+                    typeSelect.innerHTML = `
+                        <option value="5-a-side">5-a-side</option>
+                        <option value="7-a-side">7-a-side</option>
+                        <option value="11-a-side">11-a-side</option>
+                    `;
+                    capInput.value = 10;
+                } else if (sport === 'padel') {
+                    typeSelect.innerHTML = `
+                        <option value="Double Court">Double Court (4 Players)</option>
+                        <option value="Single Court">Single Court (2 Players)</option>
+                    `;
+                    capInput.value = 4;
+                } else if (sport === 'basketball') {
+                    typeSelect.innerHTML = `
+                        <option value="Full Court">Full Court</option>
+                        <option value="Half Court">Half Court</option>
+                    `;
+                    capInput.value = 10;
+                }
+            };
+
             window.closePitchModal = function () {
                 document.getElementById('pitchModal').classList.remove('active');
             };
 
-            window.toggleAmenity = function (el, amenity) {
-                if (selectedAmenities.includes(amenity)) {
-                    selectedAmenities = selectedAmenities.filter(a => a !== amenity);
-                    el.classList.remove('selected');
-                } else {
-                    selectedAmenities.push(amenity);
-                    el.classList.add('selected');
-                }
-            };
 
             window.submitPitch = function () {
+                const sport = document.getElementById('pitchSport').value;
                 const name = document.getElementById('pitchName').value.trim();
                 const location = document.getElementById('pitchLocation').value.trim();
                 const type = document.getElementById('pitchType').value;
@@ -1143,15 +1164,13 @@
                 if (!name) { showToast('Pitch name is required', 'error'); return; }
                 if (!location) { showToast('Location is required', 'error'); return; }
                 if (!price || price < 50) { showToast('Price must be at least 50 EGP', 'error'); return; }
-                if (!capacity || capacity < 4) { showToast('Capacity must be at least 4', 'error'); return; }
+                if (!capacity || capacity < 2) { showToast('Capacity must be at least 2', 'error'); return; }
 
-                const typeCapacity = { '5-a-side': 10, '7-a-side': 14, '11-a-side': 22 };
                 PitchesStore.add({
-                    name, location, type,
+                    sport, name, location, type,
                     pricePerHour: price,
-                    capacity: capacity || typeCapacity[type],
+                    capacity: capacity,
                     ownerId: user.id,
-                    amenities: selectedAmenities,
                     rating: 0,
                     available: true,
                     availableSlots: {},

@@ -9,7 +9,7 @@ function buildNavbar(activePage = '') {
   const user = Auth.getCurrentUser();
   const isLogged = Auth.isLoggedIn();
 
-  const navLinks = [
+  let navLinks = [
     { href: 'index.html', label: 'Home', icon: '⚡', page: 'home' },
     { href: 'pitches.html', label: 'Pitches', icon: '🏟️', page: 'pitches' },
     { href: 'coaches.html', label: 'Coaches', icon: '🧑‍🏫', page: 'coaches' },
@@ -17,6 +17,10 @@ function buildNavbar(activePage = '') {
     { href: 'tournaments.html', label: 'Tournaments', icon: '🏆', page: 'tournaments' },
     { href: 'feed.html', label: 'Feed', icon: '📱', page: 'feed' },
   ];
+
+  if (isLogged && Auth.hasRole('coach')) {
+    navLinks = navLinks.filter(l => l.page !== 'coaches' && l.page !== 'academies');
+  }
 
   if (isLogged) {
     const roles = RolesManager.getUserRoles(user);
@@ -112,8 +116,10 @@ function buildFooter() {
           <h4>Platform</h4>
           <ul>
             <li><a href="pitches.html">Browse Pitches</a></li>
+            ${!Auth.hasRole('coach') ? `
             <li><a href="coaches.html">Find Coaches</a></li>
             <li><a href="academies.html">Academies</a></li>
+            ` : ''}
             <li><a href="tournaments.html">Tournaments</a></li>
             <li><a href="feed.html">Social Feed</a></li>
             <li><a href="matchmaking.html">Find Players</a></li>

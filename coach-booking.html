@@ -403,6 +403,13 @@
             }
 
             const user = Auth.getCurrentUser();
+
+            // ONE COACH LIMIT CHECK
+            if (hasActiveCoachEnrollment(user.id)) {
+                showToast('You already have an active coach. Finish or cancel first.', 'error');
+                return;
+            }
+
             const focus = document.getElementById('trainingFocus').value;
             const notes = document.getElementById('sessionNotes').value.trim();
 

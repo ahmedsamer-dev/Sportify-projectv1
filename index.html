@@ -638,84 +638,91 @@
             </div>
         </section>
 
-        <!-- 3 Core Pillars -->
-        <section class="main-content" style="padding-top:0;">
-            <div class="container">
-                <div class="section-header text-center animate-in">
-                    <div class="section-badge">🎯 CORE PILLARS</div>
-                    <h2>Everything You Need to Dominate the Game</h2>
-                    <p>Three pillars of your complete football experience</p>
+        <!-- Discovery Container (Dynamic content based on sport) -->
+        <div id="sportDiscovery" style="display: none;">
+            <!-- 3 Core Pillars -->
+            <section class="main-content" style="padding-top:0;">
+                <div class="container">
+                    <div class="section-header text-center animate-in">
+                        <div class="section-badge">🎯 CORE PILLARS</div>
+                        <h2>Everything You Need to Dominate <span id="pillarSportName">the Game</span></h2>
+                        <p id="pillarSub">Three pillars of your complete sports experience</p>
+                    </div>
+                    <div class="pillars-grid">
+                        <div class="pillar-card animate-in"
+                            style="--pillar-color: var(--primary); --pillar-bg: var(--primary-subtle-strong);">
+                            <div class="pillar-icon" id="pillarIcon1">⚽</div>
+                            <h3>Play</h3>
+                            <p>Book pitches instantly, find open matches near you, or create your own. Fill spots with
+                                smart
+                                matchmaking.</p>
+                            <div class="pillar-links">
+                                <a href="pitches.html" class="btn btn-primary btn-sm">Find Pitches</a>
+                                <a href="matchmaking.html" class="btn btn-outline btn-sm">Open Matches</a>
+                            </div>
+                        </div>
+                        <div class="pillar-card animate-in animate-delay-1"
+                            style="--pillar-color: var(--accent); --pillar-bg: var(--accent-subtle);">
+                            <div class="pillar-icon" id="pillarIcon2">🏋️</div>
+                            <h3>Train</h3>
+                            <p>Book private coaching sessions or join structured academies. Level up your skills with
+                                expert
+                                trainers.</p>
+                            <div class="pillar-links">
+                                <a href="coaches.html" class="btn btn-accent btn-sm">Find Coaches</a>
+                                <a href="academies.html" class="btn btn-outline btn-sm">Academies</a>
+                            </div>
+                        </div>
+                        <div class="pillar-card animate-in animate-delay-2"
+                            style="--pillar-color: var(--warning); --pillar-bg: var(--warning-subtle);">
+                            <div class="pillar-icon" id="pillarIcon3">🏆</div>
+                            <h3>Compete</h3>
+                            <p>Join tournaments, climb leaderboards, and share your best moments on the social feed.
+                                Prove
+                                yourself.</p>
+                            <div class="pillar-links">
+                                <a href="tournaments.html" class="btn btn-sm"
+                                    style="background:var(--warning);color:var(--bg-body);font-weight:700;">Tournaments</a>
+                                <a href="competition.html" class="btn btn-outline btn-sm">Leaderboards</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="pillars-grid">
-                    <div class="pillar-card animate-in"
-                        style="--pillar-color: var(--primary); --pillar-bg: var(--primary-subtle-strong);">
-                        <div class="pillar-icon">⚽</div>
-                        <h3>Play</h3>
-                        <p>Book pitches instantly, find open matches near you, or create your own. Fill spots with smart
-                            matchmaking.</p>
-                        <div class="pillar-links">
-                            <a href="pitches.html" class="btn btn-primary btn-sm">Find Pitches</a>
-                            <a href="matchmaking.html" class="btn btn-outline btn-sm">Open Matches</a>
-                        </div>
-                    </div>
-                    <div class="pillar-card animate-in animate-delay-1"
-                        style="--pillar-color: var(--accent); --pillar-bg: var(--accent-subtle);">
-                        <div class="pillar-icon">🏋️</div>
-                        <h3>Train</h3>
-                        <p>Book private coaching sessions or join structured academies. Level up your skills with expert
-                            trainers.</p>
-                        <div class="pillar-links">
-                            <a href="coaches.html" class="btn btn-accent btn-sm">Find Coaches</a>
-                            <a href="academies.html" class="btn btn-outline btn-sm">Academies</a>
-                        </div>
-                    </div>
-                    <div class="pillar-card animate-in animate-delay-2"
-                        style="--pillar-color: var(--warning); --pillar-bg: var(--warning-subtle);">
-                        <div class="pillar-icon">🏆</div>
-                        <h3>Compete</h3>
-                        <p>Join tournaments, climb leaderboards, and share your best moments on the social feed. Prove
-                            yourself.</p>
-                        <div class="pillar-links">
-                            <a href="tournaments.html" class="btn btn-sm"
-                                style="background:var(--warning);color:var(--bg-body);font-weight:700;">Tournaments</a>
-                            <a href="competition.html" class="btn btn-outline btn-sm">Leaderboards</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- Open Matches (Prominent) -->
-        <section class="main-content" style="padding-top:0;">
-            <div class="container">
-                <div class="section-header flex-between animate-in">
-                    <div>
-                        <div class="section-badge"
-                            style="background:var(--danger-subtle);color:var(--danger);border-color:rgba(255,82,82,0.3);">
-                            🔴 LIVE</div>
-                        <h2>Open Matches Near You</h2>
-                        <p>Join a match or create your own — fill the missing spots</p>
-                    </div>
-                    <a href="matchmaking.html" class="btn btn-outline btn-sm">View all →</a>
-                </div>
-                <div class="match-grid" id="openMatches"></div>
-            </div>
-        </section>
 
-        <!-- Top Pitches -->
-        <section class="main-content" style="padding-top:0;">
-            <div class="container">
-                <div class="section-header flex-between animate-in">
-                    <div>
-                        <div class="section-badge">⭐ TOP RATED</div>
-                        <h2>Popular Pitches</h2>
-                        <p>Most booked pitches this week</p>
+            <!-- Open Matches (Prominent) -->
+            <section class="main-content" style="padding-top:0;">
+                <div class="container">
+                    <div class="section-header flex-between animate-in">
+                        <div>
+                            <div class="section-badge"
+                                style="background:var(--danger-subtle);color:var(--danger);border-color:rgba(255,82,82,0.3);">
+                                🔴 LIVE</div>
+                            <h2>Open Matches Near You</h2>
+                            <p>Join a match or create your own — fill the missing spots</p>
+                        </div>
+                        <a href="matchmaking.html" class="btn btn-outline btn-sm">View all →</a>
                     </div>
-                    <a href="pitches.html" class="btn btn-outline btn-sm">View all →</a>
+                    <div class="match-grid" id="openMatches"></div>
                 </div>
-                <div class="grid grid-3" id="topPitches"></div>
-            </div>
-        </section>
+            </section>
+
+            <!-- Top Pitches -->
+            <section class="main-content" style="padding-top:0;">
+                <div class="container">
+                    <div class="section-header flex-between animate-in">
+                        <div>
+                            <div class="section-badge">⭐ TOP RATED</div>
+                            <h2>Popular Pitches</h2>
+                            <p>Most booked pitches this week</p>
+                        </div>
+                        <a href="pitches.html" class="btn btn-outline btn-sm">View all →</a>
+                    </div>
+                    <div class="grid grid-3" id="topPitches"></div>
+                </div>
+            </section>
+        </div> <!-- End Discovery Container -->
 
         <!-- CTA -->
         <section class="main-content" style="padding-top:0;">
@@ -757,12 +764,31 @@
                     card.classList.add('active');
                     selectedHomeSport = user.preferredSport;
                     updateFilterNote(user.preferredSport);
+
+                    const discovery = document.getElementById('sportDiscovery');
+                    if (discovery) {
+                        discovery.style.display = 'block';
+                        renderFilteredContent(user.preferredSport);
+                    }
+                }
+            }
+
+            // Hide Train pillar for coaches
+            if (user && Auth.hasRole('coach')) {
+                const pillars = document.querySelectorAll('.pillar-card');
+                if (pillars.length >= 2) {
+                    pillars[1].style.display = 'none';
+                    const grid = document.querySelector('.pillars-grid');
+                    if (grid) {
+                        grid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(280px, 1fr))';
+                    }
                 }
             }
         })();
 
         function selectHomeSport(el) {
             const sport = el.dataset.sport;
+            const discovery = document.getElementById('sportDiscovery');
 
             // Toggle: if already selected, deselect (show all)
             if (selectedHomeSport === sport) {
@@ -770,6 +796,7 @@
                 selectedHomeSport = '';
                 updateFilterNote('');
                 renderFilteredContent('');
+                discovery.style.display = 'none';
                 return;
             }
 
@@ -781,9 +808,11 @@
             updateFilterNote(sport);
             renderFilteredContent(sport);
 
-            // Smooth scroll to content
-            const pillars = document.querySelector('.pillars-grid');
-            if (pillars) pillars.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Show discovery and scroll
+            discovery.style.display = 'block';
+            setTimeout(() => {
+                discovery.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 50);
         }
 
         function updateFilterNote(sport) {
@@ -799,9 +828,28 @@
         }
 
         function renderFilteredContent(sport) {
+            updatePillarContent(sport);
             renderPitches(sport);
             renderMatches(sport);
         }
+
+        function updatePillarContent(sport) {
+            const pillarName = document.getElementById('pillarSportName');
+            const pillarSub = document.getElementById('pillarSub');
+            const icon1 = document.getElementById('pillarIcon1');
+            const icons = [icon1, document.getElementById('pillarIcon2'), document.getElementById('pillarIcon3')];
+
+            const sportDisplay = sport ? sport.charAt(0).toUpperCase() + sport.slice(1) : 'the Game';
+            const sportIcon = sport === 'basketball' ? '🏀' : sport === 'padel' ? '🎾' : '⚽';
+
+            pillarName.textContent = sportDisplay;
+            pillarSub.textContent = `Three pillars of your complete ${sport || 'sports'} experience`;
+            icons[0].textContent = sportIcon;
+            // Keep other icons relevant or same if they are generic (🏋️, 🏆)
+        }
+
+        // Initial render
+        renderFilteredContent(selectedHomeSport);
 
         // ---- Render Matches (sport-aware) ----
         function renderMatches(sportFilter) {

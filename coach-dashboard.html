@@ -231,6 +231,7 @@
 
                     <div class="dash-tabs animate-in">
                         <button class="dash-tab ${activeTab === 'academies' ? 'active' : ''}" onclick="switchTab('academies')">🎓 Managed Academies</button>
+                        <button class="dash-tab ${activeTab === 'students' ? 'active' : ''}" onclick="switchTab('students')">👥 Active Students ${activeStudents.length > 0 ? `<span class="badge badge-accent ml-2">${activeStudents.length}</span>` : ''}</button>
                         <button class="dash-tab ${activeTab === 'requests' ? 'active' : ''}" onclick="switchTab('requests')">📩 Enrollment Requests ${pendingRequests.length > 0 ? `<span class="badge badge-warning ml-2">${pendingRequests.length}</span>` : ''}</button>
                         <button class="dash-tab ${activeTab === 'chat' ? 'active' : ''}" onclick="switchTab('chat')">💬 Academy Messenger</button>
                     </div>
@@ -273,6 +274,62 @@
                                     `;
                         }).join('')
                     }
+                        </div>
+                    </div>
+
+                    <!-- Active Students (Contract Management) -->
+                    <div class="tab-content ${activeTab === 'students' ? 'active' : ''}" id="tab-students">
+                        <div class="card">
+                            <h3 class="mb-4">Active Academy Students</h3>
+                            ${activeStudents.length === 0
+                        ? '<p class="text-faint text-center p-8">No active students found.</p>'
+                        : `
+                                <div class="table-wrapper">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Player</th>
+                                                <th>Academy</th>
+                                                <th>Contract Start</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${activeStudents.map(s => {
+                            const acad = AcademiesStore.getById(s.academyId);
+                            const cStatus = getContractStatus(s);
+                            const canCancel = cStatus.canCancel;
+                            return `
+                                                    <tr>
+                                                        <td>
+                                                            <div class="font-bold">${s.playerName}</div>
+                                                            <div class="text-xs text-faint">ID: ${s.playerId}</div>
+                                                        </td>
+                                                        <td>${acad ? acad.name : 'Unknown'}</td>
+                                                        <td>
+                                                            <div class="text-sm">${s.contractStartDate ? formatDate(s.contractStartDate) : 'N/A'}</div>
+                                                        </td>
+                                                        <td>
+                                                            ${canCancel
+                                    ? `<span class="badge" style="background:rgba(0,255,100,0.1);color:#00ff64;border:1px solid rgba(0,255,100,0.3);">Available to Cancel</span>`
+                                    : `<span class="badge badge-warning" title="Locks contract for 30 days">Locked: ${cStatus.daysLeft} days left</span>`
+                                }
+                                                        </td>
+                                                        <td>
+                                                            <button class="btn btn-error btn-xs" 
+                                                                ${!canCancel ? 'disabled title="Cancellation restricted for 30 days"' : ''} 
+                                                                onclick="cancelContract('${s.id}')">
+                                                                Cancel Contract
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                `;
+                        }).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            `}
                         </div>
                     </div>
 
@@ -366,12 +423,34 @@
                     return;
                 }
 
-                AcademyEnrollmentsStore.update(id, {
-                    status: status,
-                    subscriptionEnd: status === 'approved' ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : null
-                });
+                const updates = { status: status };
+                if (status === 'approved') {
+                    updates.status = 'active'; // Normalize to active for students tab
+                    updates.subscriptionEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                    updates.contractStartDate = Date.now(); // ARCHITECT RULE: Set contract start date
+                }
+
+                AcademyEnrollmentsStore.update(id, updates);
                 showToast(`Request ${status === 'approved' ? 'accepted' : 'rejected'}`, 'success');
                 render();
+            };
+
+            window.cancelContract = (id) => {
+                const enrollment = AcademyEnrollmentsStore.getById(id);
+                if (!enrollment) return;
+
+                // BACKEND SAFETY: Verify 30-day rule
+                const cStatus = getContractStatus(enrollment);
+                if (!cStatus.canCancel) {
+                    showToast(`You can cancel contract after 30 days from enrollment. (${cStatus.daysLeft} days left)`, 'error');
+                    return;
+                }
+
+                if (confirm('Are you sure you want to cancel this student\'s contract? This action is permanent.')) {
+                    AcademyEnrollmentsStore.update(id, { status: 'cancelled', subscriptionEnd: new Date().toISOString().split('T')[0] });
+                    showToast('Contract cancelled successfully', 'info');
+                    render();
+                }
             };
 
             let selectedAcademyId = null;

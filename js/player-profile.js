@@ -27,19 +27,6 @@ const SKILL_LEVELS = [
     { id: 'elite', label: 'Elite', icon: '🔴', color: '#FF5252', min: 4.5 }
 ];
 
-const FOOTBALL_BADGES = [
-    { id: 'first_match', label: '1st Match', icon: '⚽', description: 'Played your first match', condition: (stats) => stats.matchesPlayed >= 1 },
-    { id: 'five_matches', label: '5 Matches', icon: '🏃', description: 'Played 5 matches', condition: (stats) => stats.matchesPlayed >= 5 },
-    { id: 'ten_matches', label: '10 Matches', icon: '🏟️', description: 'Played 10 matches', condition: (stats) => stats.matchesPlayed >= 10 },
-    { id: 'first_goal', label: 'First Goal!', icon: '🥅', description: 'Scored your first goal', condition: (stats) => stats.goals >= 1 },
-    { id: 'five_goals', label: 'Goal Machine', icon: '🔥', description: 'Scored 5 goals', condition: (stats) => stats.goals >= 5 },
-    { id: 'first_assist', label: 'Playmaker', icon: '🎯', description: 'Made your first assist', condition: (stats) => stats.assists >= 1 },
-    { id: 'reliable', label: 'Reliable', icon: '✅', description: 'Reliability score > 80%', condition: (stats) => stats.reliability >= 80 },
-    { id: 'top_rated', label: 'Top Rated', icon: '⭐', description: 'Rating above 4.5', condition: (stats) => stats.rating >= 4.5 },
-    { id: 'team_player', label: 'Team Player', icon: '🤝', description: 'Completed 10 matches without no-show', condition: (stats) => stats.matchesCompleted >= 10 && stats.noShows === 0 },
-    { id: 'streak_5', label: '5-Game Streak', icon: '🔥', description: '5 matches in a row', condition: (stats) => stats.currentStreak >= 5 }
-];
-
 // Rating change weights
 const RATING_WEIGHTS = {
     MATCH_PARTICIPATION: 0.1,    // +0.1 for playing
@@ -85,7 +72,7 @@ const SportProfileManager = {
             rating: RATING_WEIGHTS.DEFAULT_RATING,
             ratingHistory: [],
             reliability: 100,
-            badges: [],
+
             createdAt: new Date().toISOString()
         });
 
@@ -122,23 +109,7 @@ const SportProfileManager = {
         return level;
     },
 
-    /**
-     * Compute earned badges.
-     */
-    getEarnedBadges(profile) {
-        const stats = {
-            matchesPlayed: profile.matchesPlayed || 0,
-            matchesCompleted: profile.matchesCompleted || 0,
-            goals: profile.goals || 0,
-            assists: profile.assists || 0,
-            rating: profile.rating || 0,
-            reliability: this.computeReliability(profile),
-            noShows: profile.noShows || 0,
-            currentStreak: profile.currentStreak || 0
-        };
 
-        return FOOTBALL_BADGES.filter(b => b.condition(stats));
-    }
 };
 
 // ============ 3. DYNAMIC RATING SYSTEM ============

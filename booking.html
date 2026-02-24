@@ -274,7 +274,6 @@
           <span class="badge badge-neutral">${pitch.capacity} players</span>
         </div>
         <div class="mt-2"><span class="pitch-rating" style="color:var(--warning);font-size:0.85rem;">${getStarRating(pitch.rating)}</span> <span class="text-sm text-faint">${pitch.rating}</span></div>
-        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:var(--s-3);">${pitch.amenities.map(a => `<span class="badge badge-neutral">${a}</span>`).join('')}</div>
         <div style="margin-top:var(--s-5);padding-top:var(--s-4);border-top:1px solid var(--border);">
             <span class="price">${pitch.pricePerHour} EGP</span> <span class="text-sm text-faint">/ hour</span>
         </div>
@@ -287,6 +286,14 @@
 
             // Time slots — driven by pitch availability
             const ALL_SLOTS = [
+                { label: '12:00 AM – 1:00 AM', h24: '0:00-1:00', h: 0 },
+                { label: '1:00 AM – 2:00 AM', h24: '1:00-2:00', h: 1 },
+                { label: '2:00 AM – 3:00 AM', h24: '2:00-3:00', h: 2 },
+                { label: '3:00 AM – 4:00 AM', h24: '3:00-4:00', h: 3 },
+                { label: '4:00 AM – 5:00 AM', h24: '4:00-5:00', h: 4 },
+                { label: '5:00 AM – 6:00 AM', h24: '5:00-6:00', h: 5 },
+                { label: '6:00 AM – 7:00 AM', h24: '6:00-7:00', h: 6 },
+                { label: '7:00 AM – 8:00 AM', h24: '7:00-8:00', h: 7 },
                 { label: '8:00 AM – 9:00 AM', h24: '8:00-9:00', h: 8 },
                 { label: '9:00 AM – 10:00 AM', h24: '9:00-10:00', h: 9 },
                 { label: '10:00 AM – 11:00 AM', h24: '10:00-11:00', h: 10 },

@@ -180,6 +180,14 @@
     <script src="js/auth.js"></script>
     <script src="js/app.js"></script>
     <script>
+        // Coach Access Guard
+        (function checkCoachAccess() {
+            const user = Auth.isLoggedIn() ? Auth.getCurrentUser() : null;
+            if (user && Auth.hasRole('coach')) {
+                window.location.href = 'index.html';
+            }
+        })();
+
         initPage('coaches');
 
         // Check for sport in URL
@@ -240,21 +248,20 @@
                 const sportIcon = (c.sport || 'football') === 'basketball' ? '🏀' : (c.sport || 'football') === 'padel' ? '🎾' : '⚽';
 
                 let enrollmentHtml = '';
-                if (currentUser && firstAcademy) {
-                    const state = getEnrollmentState(firstAcademy.id, currentUser.id);
-
-                    switch (state) {
-                        case EnrollmentStates.PENDING:
-                            enrollmentHtml = `<div class="enrollment-status status-pending">⏳ Waiting Approval</div>`;
-                            break;
-                        case EnrollmentStates.ACTIVE:
+                if (currentUser) {
+                    if (hasActiveCoachEnrollment(currentUser.id)) {
+                        // Check if specifically enrolled with THIS coach/academy
+                        const state = firstAcademy ? getEnrollmentState(firstAcademy.id, currentUser.id) : EnrollmentStates.NOT_ENROLLED;
+                        if (state === EnrollmentStates.ACTIVE || state === EnrollmentStates.APPROVED) {
                             enrollmentHtml = `
                                 <div class="enrollment-status status-enrolled">✓ You Enrolled</div>
                                 <a href="academy-dashboard.html?academy=${firstAcademy.id}" class="btn btn-primary btn-sm mt-1">Dashboard</a>
                             `;
-                            break;
-                        default:
-                            enrollmentHtml = `<a href="coach-booking.html?coach=${c.id}" class="btn btn-primary btn-sm">Book Training</a>`;
+                        } else {
+                            enrollmentHtml = `<button class="btn btn-secondary btn-sm" disabled title="You can only train with one coach at a time.">You Enrolled ✓</button>`;
+                        }
+                    } else {
+                        enrollmentHtml = `<a href="coach-booking.html?coach=${c.id}" class="btn btn-primary btn-sm">Book Training</a>`;
                     }
                 } else {
                     enrollmentHtml = `<a href="coach-booking.html?coach=${c.id}" class="btn btn-primary btn-sm">Book Training</a>`;

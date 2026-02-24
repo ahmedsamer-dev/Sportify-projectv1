@@ -11,12 +11,14 @@ const MatchChat = {
         const match = MatchRequestsStore.getById(matchId);
         if (!match) return false;
 
-        // Must be player role
         const user = getUserById(userId);
-        if (!user || user.role !== 'player') return false;
+        if (!user) return false;
+
+        // Admin has global access
+        if (user.role === 'admin') return true;
 
         // Must be host or approved player
-        const isHost = match.hostId === userId;
+        const isHost = match.hostId === userId || match.creatorId === userId;
         const isApprovedParticipant = match.playersJoined.some(p => p.userId === userId && p.status === 'approved');
 
         return isHost || isApprovedParticipant;
