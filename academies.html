@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Browse football academies on SPORTIFY. Find expert coaching programs, enroll, and level up your game.">
+    <title>Academies — SPORTIFY</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* -- Academies page-specific -- */
+        .academy-hero {
+            text-align: center;
+            padding: var(--s-12) 0 var(--s-6);
+        }
+
+        .academy-hero h1 {
+            font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin-bottom: var(--s-2);
+        }
+
+        .academy-hero p {
+            color: var(--text-faint);
+            max-width: 520px;
+            margin: 0 auto;
+        }
+
+        .academy-actions {
+            display: flex;
+            gap: var(--s-3);
+            justify-content: center;
+            margin-top: var(--s-6);
+            flex-wrap: wrap;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: var(--s-3);
+            margin-bottom: var(--s-6);
+            flex-wrap: wrap;
+        }
+
+        .filter-bar .form-select,
+        .filter-bar .form-input {
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .academy-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .academy-card-header {
+            display: flex;
+            gap: var(--s-4);
+            margin-bottom: var(--s-4);
+        }
+
+        .academy-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: var(--r-lg);
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .academy-card-header .card-title {
+            font-size: 1.1rem;
+        }
+
+        .academy-card-header .card-subtitle {
+            display: flex;
+            align-items: center;
+            gap: var(--s-2);
+            flex-wrap: wrap;
+        }
+
+        .academy-tags {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: var(--s-3);
+        }
+
+        .academy-desc {
+            font-size: 0.875rem;
+            color: var(--text-p);
+            margin-bottom: var(--s-4);
+            line-height: 1.6;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .academy-meta-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--s-2);
+            margin-bottom: var(--s-4);
+        }
+
+        .academy-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.82rem;
+            color: var(--text-faint);
+        }
+
+        .academy-meta-item .meta-icon {
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .capacity-bar {
+            height: 6px;
+            border-radius: var(--r-full);
+            background: var(--bg-elevated);
+            overflow: hidden;
+            margin-top: var(--s-2);
+        }
+
+        .capacity-fill {
+            height: 100%;
+            border-radius: var(--r-full);
+            background: linear-gradient(90deg, var(--accent), var(--primary));
+            transition: width 0.5s var(--ease);
+        }
+
+        .capacity-text {
+            font-size: 0.75rem;
+            color: var(--text-faint);
+            margin-top: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Detail modal */
+        .academy-detail-modal .modal {
+            max-width: 580px;
+        }
+
+        .detail-schedule {
+            padding: var(--s-4);
+            background: var(--bg-elevated);
+            border-radius: var(--r-md);
+            margin: var(--s-4) 0;
+        }
+
+        .detail-schedule .schedule-icon {
+            font-size: 1.1rem;
+            margin-right: 8px;
+        }
+
+        .enrollment-success {
+            text-align: center;
+            padding: var(--s-8) var(--s-4);
+        }
+
+        .enrollment-success .check-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: var(--r-full);
+            background: var(--accent-subtle);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: var(--s-4);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: var(--s-16) var(--s-6);
+        }
+
+        .empty-state .empty-icon {
+            font-size: 3rem;
+            margin-bottom: var(--s-4);
+            opacity: 0.5;
+        }
+
+        /* Reviews */
+        .reviews-section {
+            margin-top: var(--s-5);
+            border-top: 1px solid var(--border);
+            padding-top: var(--s-5);
+        }
+
+        .review-card {
+            padding: var(--s-4);
+            background: var(--bg-elevated);
+            border-radius: var(--r-md);
+            margin-bottom: var(--s-3);
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--s-2);
+        }
+
+        .review-author {
+            font-weight: 600;
+            color: var(--text-h);
+            font-size: 0.85rem;
+        }
+
+        .review-date {
+            font-size: 0.75rem;
+            color: var(--text-faint);
+        }
+
+        .review-text {
+            font-size: 0.85rem;
+            color: var(--text-p);
+            line-height: 1.6;
+        }
+
+        .review-stars {
+            font-size: 0.85rem;
+            margin-bottom: var(--s-2);
+        }
+
+        .star-picker {
+            display: flex;
+            gap: 4px;
+            margin-bottom: var(--s-3);
+        }
+
+        .star-picker .star-btn {
+            background: none;
+            border: none;
+            font-size: 1.6rem;
+            cursor: pointer;
+            padding: 2px;
+            transition: transform var(--t-fast);
+            color: var(--text-faint);
+            opacity: 0.4;
+        }
+
+        .star-picker .star-btn:hover {
+            transform: scale(1.2);
+        }
+
+        .star-picker .star-btn.active {
+            color: #f59e0b;
+            opacity: 1;
+        }
+
+        .rating-summary {
+            display: flex;
+            align-items: center;
+            gap: var(--s-3);
+            padding: var(--s-4);
+            background: var(--bg-elevated);
+            border-radius: var(--r-md);
+            margin-bottom: var(--s-4);
+        }
+
+        .rating-big {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-h);
+            line-height: 1;
+        }
+
+        .rating-detail {
+            flex: 1;
+        }
+
+        /* Level badges (player facing) */
+        .player-level-card {
+            margin-top: var(--s-4);
+            padding: var(--s-4);
+            background: var(--bg-elevated);
+            border-radius: var(--r-md);
+            border: 1px solid var(--border);
+        }
+
+        .player-level-header {
+            display: flex;
+            align-items: center;
+            gap: var(--s-3);
+            margin-bottom: var(--s-2);
+        }
+
+        .level-icon-lg {
+            font-size: 1.8rem;
+        }
+
+        .level-name-lg {
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .level-pts-lg {
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: var(--text-h);
+        }
+
+        .level-progress-bar {
+            height: 8px;
+            border-radius: var(--r-full);
+            background: var(--border);
+            overflow: hidden;
+            margin-top: var(--s-2);
+        }
+
+        .level-progress-fill {
+            height: 100%;
+            border-radius: var(--r-full);
+            transition: width 0.6s var(--ease);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <div id="navbar"></div>
+
+        <!-- Hero -->
+        <section class="academy-hero">
+            <div class="container">
+                <h1 class="animate-in">🎓 <span class="gradient-text">Coach Academies</span></h1>
+                <p class="animate-in animate-delay-1">Join structured training programs led by certified coaches. Build
+                    skills, track progress, and become a better player.</p>
+                <div class="academy-actions animate-in animate-delay-2" id="heroActions"></div>
+            </div>
+        </section>
+
+        <!-- Stats -->
+        <section class="main-content" style="padding-top:0;">
+            <div class="container">
+                <div class="grid grid-4 mb-3" id="academyStats"></div>
+
+                <!-- Filters -->
+                <div class="filter-bar" id="filterBar">
+                    <input class="form-input" type="text" id="searchInput" placeholder="Search academies..."
+                        oninput="renderAcademies()">
+                    <select class="form-select" id="filterCategory" onchange="renderAcademies()">
+                        <option value="">All Categories</option>
+                    </select>
+                    <select class="form-select" id="filterLevel" onchange="renderAcademies()">
+                        <option value="">All Levels</option>
+                        <option value="Beginner">Beginner</option>
+                        <option value="Intermediate">Intermediate</option>
+                        <option value="Advanced">Advanced</option>
+                        <option value="All Levels">All Levels</option>
+                    </select>
+                </div>
+
+                <!-- Academy Grid -->
+                <div class="grid grid-3" id="academyGrid"></div>
+            </div>
+        </section>
+
+        <div id="footer"></div>
+    </div>
+
+    <!-- Detail / Enroll Modal -->
+    <div class="modal-overlay academy-detail-modal" id="detailModal">
+        <div class="modal">
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script src="js/roles.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        initPage('academies');
+
+        const user = Auth.getCurrentUser();
+        const isCoach = user && user.role === 'coach';
+        const isPlayer = user && user.role === 'player';
+
+        // Hero actions
+        const heroActionsEl = document.getElementById('heroActions');
+        if (isCoach) {
+            const myAcademies = AcademiesStore.filter(a => a.coachUserId === user.id);
+            heroActionsEl.innerHTML = `
+                <a href="academy-create.html" class="btn btn-primary btn-lg">+ Create Academy</a>
+                ${myAcademies.length > 0 ? '<a href="academy-dashboard.html" class="btn btn-outline btn-lg">My Dashboard</a>' : ''}
+            `;
+        }
+
+        // Stats
+        const allAcademies = AcademiesStore.getAll();
+        const allEnrollments = EnrollmentsStore.getAll();
+        const activeAcademies = allAcademies.filter(a => a.status === 'active');
+        const uniqueCoaches = [...new Set(allAcademies.map(a => a.coachUserId))];
+
+        document.getElementById('academyStats').innerHTML = `
+            <div class="stat-card animate-in"><div class="stat-value">${activeAcademies.length}</div><div class="stat-label">Active Academies</div></div>
+            <div class="stat-card animate-in animate-delay-1"><div class="stat-value">${uniqueCoaches.length}</div><div class="stat-label">Expert Coaches</div></div>
+            <div class="stat-card animate-in animate-delay-2"><div class="stat-value">${allEnrollments.filter(e => e.status === 'active').length}</div><div class="stat-label">Active Players</div></div>
+            <div class="stat-card animate-in animate-delay-3"><div class="stat-value">${allAcademies.length > 0 ? Math.round(allAcademies.reduce((s, a) => { const r = getAcademyRating(a.id); return s + (r.count > 0 ? r.avg : 0); }, 0) / Math.max(allAcademies.filter(a => getAcademyRating(a.id).count > 0).length, 1) * 10) / 10 : 0}</div><div class="stat-label">Avg Rating</div></div>
+        `;
+
+        // Populate category filter
+        const categories = [...new Set(allAcademies.map(a => a.category))];
+        const catSelect = document.getElementById('filterCategory');
+        categories.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c; opt.textContent = c;
+            catSelect.appendChild(opt);
+        });
+
+        // ---- Render academies ----
+        function renderAcademies() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const cat = document.getElementById('filterCategory').value;
+            const level = document.getElementById('filterLevel').value;
+
+            let filtered = allAcademies.filter(a => {
+                if (search && !a.name.toLowerCase().includes(search) && !a.description.toLowerCase().includes(search) && !a.category.toLowerCase().includes(search)) return false;
+                if (cat && a.category !== cat) return false;
+                if (level && a.level !== level) return false;
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                document.getElementById('academyGrid').innerHTML = `
+                    <div class="empty-state" style="grid-column:1/-1;">
+                        <div class="empty-icon">🔍</div>
+                        <h3>No academies found</h3>
+                        <p class="text-faint mt-1">Try adjusting your filters or check back later.</p>
+                    </div>`;
+                return;
+            }
+
+            document.getElementById('academyGrid').innerHTML = filtered.map(academy => {
+                const coachUser = getUserById(academy.coachUserId);
+                const enrolled = EnrollmentsStore.filter(e => e.academyId === academy.id && e.status === 'active');
+                const spotsLeft = academy.maxCapacity - enrolled.length;
+                const fillPercent = Math.round((enrolled.length / academy.maxCapacity) * 100);
+                const isFull = spotsLeft <= 0;
+                const isEnrolled = user && enrolled.find(e => e.playerId === user.id);
+
+                return `
+                <div class="card academy-card animate-in">
+                    <div class="academy-card-header">
+                        <div class="academy-icon">${getCategoryIcon(academy.category)}</div>
+                        <div style="flex:1;min-width:0;">
+                            <div class="card-title">${academy.name}</div>
+                            <div class="card-subtitle">
+                                <span>by ${coachUser ? coachUser.name : 'Coach'}</span>
+                                <span class="badge badge-accent">${academy.status}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="academy-tags">
+                        <span class="badge badge-primary">${academy.category}</span>
+                        <span class="badge badge-info">${academy.level}</span>
+                        <span class="badge badge-neutral">${academy.ageGroup}</span>
+                    </div>
+                    <div class="academy-desc">${academy.description}</div>
+                    <div class="academy-meta-grid">
+                        <div class="academy-meta-item"><span class="meta-icon">📍</span>${academy.location}</div>
+                        <div class="academy-meta-item"><span class="meta-icon">🗓️</span>${academy.schedule.split('—')[0].trim()}</div>
+                        <div class="academy-meta-item"><span class="meta-icon">⭐</span>${(() => { const r = getAcademyRating(academy.id); return r.count > 0 ? getStarRating(r.avg) + ' ' + r.avg + ' <span style="opacity:0.6;">(' + r.count + ')</span>' : '<span style="opacity:0.6;">No reviews</span>'; })()}</div>
+                        <div class="academy-meta-item"><span class="meta-icon">👥</span>${enrolled.length}/${academy.maxCapacity} members</div>
+                    </div>
+                    <div class="capacity-bar"><div class="capacity-fill" style="width:${fillPercent}%"></div></div>
+                    <div class="capacity-text">
+                        <span>${isFull ? '⚠️ Full' : spotsLeft + ' spots left'}</span>
+                        <span>${fillPercent}% filled</span>
+                    </div>
+                    <div class="card-footer">
+                        <span class="price">${academy.monthlyPrice} EGP<span class="text-xs text-faint" style="font-weight:400;"> /month</span></span>
+                        ${isEnrolled
+                        ? '<span class="badge badge-accent" style="padding:8px 16px;font-size:0.82rem;">✓ Enrolled</span>'
+                        : `<button class="btn btn-primary btn-sm" onclick="openAcademyDetail('${academy.id}')" ${isFull && !isEnrolled ? 'disabled' : ''}>${isFull ? 'Full' : 'View & Enroll'}</button>`
+                    }
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function getCategoryIcon(category) {
+            const icons = {
+                'Attack & Finishing': '⚡',
+                'Fitness & Conditioning': '💪',
+                'Defense & Tactics': '🛡️',
+                'Goalkeeping': '🧤',
+                'Midfield & Passing': '🎯',
+                'Youth Development': '🌱'
+            };
+            return icons[category] || '🏟️';
+        }
+
+        // ---- Detail Modal ----
+        function openAcademyDetail(id) {
+            const academy = AcademiesStore.getById(id);
+            if (!academy) return;
+            const coachUser = getUserById(academy.coachUserId);
+            const coach = CoachesStore.getById(academy.coachId);
+            const enrolled = EnrollmentsStore.filter(e => e.academyId === id && e.status === 'active');
+            const spotsLeft = academy.maxCapacity - enrolled.length;
+            const isFull = spotsLeft <= 0;
+            const isEnrolled = user && enrolled.find(e => e.playerId === user.id);
+
+            document.getElementById('modalContent').innerHTML = `
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:var(--s-5);">
+                    <div style="display:flex;gap:var(--s-4);align-items:center;flex:1;">
+                        <div class="academy-icon" style="width:48px;height:48px;font-size:1.3rem;">${getCategoryIcon(academy.category)}</div>
+                        <div>
+                            <h3 style="font-size:1.2rem;">${academy.name}</h3>
+                            <p class="text-sm text-faint">by ${coachUser ? coachUser.name : 'Coach'}${coach ? ' · ' + coach.experience + ' yrs exp' : ''}</p>
+                        </div>
+                    </div>
+                    <button class="btn btn-ghost btn-sm" onclick="closeModal()" style="font-size:1.2rem;">✕</button>
+                </div>
+                <div class="academy-tags" style="margin-bottom:var(--s-4);">
+                    <span class="badge badge-primary">${academy.category}</span>
+                    <span class="badge badge-info">${academy.level}</span>
+                    <span class="badge badge-neutral">${academy.ageGroup}</span>
+                    <span class="badge badge-warning">⭐ ${academy.rating}</span>
+                </div>
+                <p style="font-size:0.9rem;color:var(--text-p);line-height:1.7;margin-bottom:var(--s-4);">${academy.description}</p>
+                <div class="detail-schedule">
+                    <span class="schedule-icon">🗓️</span>
+                    <strong style="color:var(--text-h);">${academy.schedule}</strong>
+                    <br><span class="text-sm text-faint" style="margin-left:28px;">📍 ${academy.location}</span>
+                </div>
+                <div class="academy-meta-grid">
+                    <div class="academy-meta-item"><span class="meta-icon">👥</span>${enrolled.length}/${academy.maxCapacity} enrolled</div>
+                    <div class="academy-meta-item"><span class="meta-icon">${isFull ? '🔴' : '🟢'}</span>${isFull ? 'No spots available' : spotsLeft + ' spots remaining'}</div>
+                </div>
+                <div style="margin-top:var(--s-5);padding-top:var(--s-4);border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+                    <div>
+                        <span class="price" style="font-size:1.3rem;">${academy.monthlyPrice} EGP</span>
+                        <span class="text-sm text-faint"> / month</span>
+                    </div>
+                    ${isEnrolled
+                    ? '<span class="badge badge-accent" style="padding:10px 20px;font-size:0.85rem;">✓ Already Enrolled</span>'
+                    : !user
+                        ? '<a href="login.html" class="btn btn-primary">Log in to Enroll</a>'
+                        : !isPlayer
+                            ? '<span class="text-sm text-faint">Only players can enroll</span>'
+                            : isFull
+                                ? '<button class="btn btn-secondary" disabled>Academy Full</button>'
+                                : `<button class="btn btn-primary btn-lg" onclick="enrollInAcademy('${id}')">Enroll Now</button>`
+                }
+                </div>
+
+                <!-- Player Level (only for enrolled players) -->
+                ${isEnrolled && user ? (() => {
+                    const pl = getPlayerAcademyLevel(id, user.id);
+                    return `
+                    <div class="player-level-card">
+                        <div class="player-level-header">
+                            <span class="level-icon-lg">${pl.level.icon}</span>
+                            <div style="flex:1;">
+                                <div class="level-name-lg" style="color:${pl.level.color};">${pl.level.name}</div>
+                                <div class="text-xs text-faint">Academy Level</div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div class="level-pts-lg">${pl.points} pts</div>
+                                <div class="text-xs text-faint">${pl.nextLevel ? (pl.nextLevel.min - pl.points) + ' pts to ' + pl.nextLevel.icon + ' ' + pl.nextLevel.name : '👑 Max level!'}</div>
+                            </div>
+                        </div>
+                        <div class="level-progress-bar">
+                            <div class="level-progress-fill" style="width:${pl.progress}%;background:${pl.level.color};"></div>
+                        </div>
+                    </div>`;
+                })() : ''}
+
+                <!-- Reviews Section -->
+                ${buildReviewsSection(id, isEnrolled)}
+            `;
+            document.getElementById('detailModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').classList.remove('active');
+        }
+        document.getElementById('detailModal').addEventListener('click', function (e) {
+            if (e.target === this) closeModal();
+        });
+
+        // ---- Enrollment ----
+        function enrollInAcademy(academyId) {
+            if (!Auth.isLoggedIn()) { showToast('Please log in first', 'error'); return; }
+            if (!isPlayer) { showToast('Only players can enroll', 'error'); return; }
+
+            const academy = AcademiesStore.getById(academyId);
+            if (!academy) { showToast('Academy not found', 'error'); return; }
+
+            const enrolled = EnrollmentsStore.filter(e => e.academyId === academyId && e.status === 'active');
+            if (enrolled.length >= academy.maxCapacity) { showToast('Sorry, this academy is full!', 'error'); return; }
+
+            const alreadyEnrolled = enrolled.find(e => e.playerId === user.id);
+            if (alreadyEnrolled) { showToast('You are already enrolled!', 'info'); return; }
+
+            // Create enrollment
+            const now = new Date();
+            const endDate = new Date(now);
+            endDate.setMonth(endDate.getMonth() + 1);
+
+            const enrollment = {
+                academyId: academyId,
+                playerId: user.id,
+                playerName: user.name,
+                enrolledAt: now.toISOString().split('T')[0],
+                status: 'active',
+                subscriptionEnd: endDate.toISOString().split('T')[0],
+                attendance: [],
+                notes: ''
+            };
+            EnrollmentsStore.add(enrollment);
+
+            // Show success in modal
+            document.getElementById('modalContent').innerHTML = `
+                <div class="enrollment-success">
+                    <div class="check-icon">✓</div>
+                    <h3 style="margin-bottom:var(--s-2);">Enrollment Successful!</h3>
+                    <p class="text-faint">You've enrolled in <strong style="color:var(--text-h);">${academy.name}</strong></p>
+                    <div style="margin-top:var(--s-5);padding:var(--s-4);background:var(--bg-elevated);border-radius:var(--r-md);text-align:left;">
+                        <div class="summary-row"><span class="text-faint">Monthly Rate</span><strong>${academy.monthlyPrice} EGP</strong></div>
+                        <div class="summary-row"><span class="text-faint">Start Date</span><span>${formatDate(enrollment.enrolledAt)}</span></div>
+                        <div class="summary-row"><span class="text-faint">Valid Until</span><span>${formatDate(enrollment.subscriptionEnd)}</span></div>
+                        <div class="summary-row"><span class="text-faint">Schedule</span><span>${academy.schedule}</span></div>
+                    </div>
+                    <button class="btn btn-primary btn-lg btn-block mt-4" onclick="closeModal()">Done</button>
+                </div>
+            `;
+            showToast('Successfully enrolled! 🎉', 'success');
+
+            // Refresh academy cards in background
+            renderAcademies();
+        }
+
+        // Initial render
+        renderAcademies();
+
+        // ---- Reviews / Ratings ----
+        function buildReviewsSection(academyId, isEnrolled) {
+            const ratingData = getAcademyRating(academyId);
+            const hasRated = user && ratingData.ratings.find(r => r.playerId === user.id);
+            const canRate = isPlayer && isEnrolled && !hasRated;
+
+            let html = '<div class="reviews-section">';
+
+            // Rating summary
+            if (ratingData.count > 0) {
+                html += `
+                    <div class="rating-summary">
+                        <div class="rating-big">${ratingData.avg}</div>
+                        <div class="rating-detail">
+                            <div class="review-stars">${getStarRating(ratingData.avg)}</div>
+                            <div class="text-sm text-faint">${ratingData.count} review${ratingData.count !== 1 ? 's' : ''}</div>
+                        </div>
+                    </div>`;
+            } else {
+                html += '<p class="text-faint text-center" style="padding:var(--s-3) 0;">No reviews yet. Be the first to rate!</p>';
+            }
+
+            // Submit review form (only for enrolled players with no existing review)
+            if (canRate) {
+                html += `
+                    <div class="card" style="padding:var(--s-4);margin-bottom:var(--s-4);border:1px dashed var(--primary-border);background:var(--primary-subtle);">
+                        <h4 style="font-size:0.9rem;margin-bottom:var(--s-3);color:var(--text-h);">⭐ Rate this Academy</h4>
+                        <div class="star-picker" id="starPicker">
+                            ${[1, 2, 3, 4, 5].map(n => `<button class="star-btn" data-value="${n}" onclick="pickStar(${n})">★</button>`).join('')}
+                        </div>
+                        <textarea class="form-textarea" id="reviewText" placeholder="Share your experience with this academy..." style="min-height:70px;"></textarea>
+                        <button class="btn btn-primary btn-sm mt-2" onclick="submitReview('${academyId}')">Submit Review</button>
+                    </div>`;
+            } else if (hasRated) {
+                html += '<p class="text-sm text-faint" style="margin-bottom:var(--s-3);">✓ You\'ve already reviewed this academy</p>';
+            }
+
+            // Display existing reviews
+            if (ratingData.ratings.length > 0) {
+                html += '<h4 style="font-size:0.9rem;margin-bottom:var(--s-3);color:var(--text-h);">Player Reviews</h4>';
+                ratingData.ratings.forEach(r => {
+                    html += `
+                        <div class="review-card">
+                            <div class="review-header">
+                                <span class="review-author">${r.playerName}</span>
+                                <span class="review-date">${formatDate(r.createdAt)}</span>
+                            </div>
+                            <div class="review-stars">${getStarRating(r.rating)}</div>
+                            <div class="review-text">${r.review}</div>
+                        </div>`;
+                });
+            }
+
+            html += '</div>';
+            return html;
+        }
+
+        window._selectedRating = 0;
+
+        function pickStar(value) {
+            window._selectedRating = value;
+            document.querySelectorAll('#starPicker .star-btn').forEach(btn => {
+                btn.classList.toggle('active', parseInt(btn.dataset.value) <= value);
+            });
+        }
+
+        function submitReview(academyId) {
+            if (!user || !isPlayer) { showToast('Only players can review', 'error'); return; }
+
+            // Verify enrollment
+            const enrollment = EnrollmentsStore.filter(e => e.academyId === academyId && e.playerId === user.id && e.status === 'active');
+            if (enrollment.length === 0) { showToast('You must be enrolled to review', 'error'); return; }
+
+            // Check one review per subscription
+            const existing = AcademyRatingsStore.filter(r => r.academyId === academyId && r.playerId === user.id);
+            if (existing.length > 0) { showToast('You have already rated this academy', 'info'); return; }
+
+            const rating = window._selectedRating;
+            const review = document.getElementById('reviewText').value.trim();
+
+            if (rating === 0) { showToast('Please select a star rating', 'error'); return; }
+            if (!review) { showToast('Please write a short review', 'error'); return; }
+
+            AcademyRatingsStore.add({
+                academyId: academyId,
+                playerId: user.id,
+                playerName: user.name,
+                rating: rating,
+                review: review,
+                createdAt: new Date().toISOString().split('T')[0]
+            });
+
+            showToast('Review submitted! Thank you ⭐', 'success');
+            window._selectedRating = 0;
+
+            // Refresh modal and cards
+            openAcademyDetail(academyId);
+            renderAcademies();
+        }
+    </script>
+</body>
+
+</html>

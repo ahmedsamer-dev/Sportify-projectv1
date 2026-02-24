@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Create your own football academy on SPORTIFY. Coach-only feature to launch training programs.">
+    <title>Create Academy — SPORTIFY</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .create-layout {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: var(--s-6);
+            align-items: start;
+        }
+
+        .preview-card {
+            position: sticky;
+            top: 80px;
+        }
+
+        .preview-label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-faint);
+            font-weight: 600;
+            margin-bottom: var(--s-3);
+        }
+
+        .preview-academy {
+            padding: var(--s-5);
+            background: var(--bg-elevated);
+            border-radius: var(--r-md);
+            margin-bottom: var(--s-4);
+        }
+
+        .preview-academy h4 {
+            margin-bottom: 4px;
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--s-2);
+        }
+
+        .category-option {
+            padding: var(--s-3);
+            border-radius: var(--r-md);
+            border: 1px solid var(--border-strong);
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--t-fast);
+            background: var(--bg-surface);
+        }
+
+        .category-option:hover {
+            border-color: var(--primary-border);
+        }
+
+        .category-option.selected {
+            border-color: var(--primary);
+            background: var(--primary-subtle);
+        }
+
+        .category-option .cat-icon {
+            font-size: 1.3rem;
+            margin-bottom: 4px;
+        }
+
+        .category-option .cat-name {
+            font-weight: 600;
+            font-size: 0.75rem;
+            color: var(--text-p);
+        }
+
+        .success-panel {
+            text-align: center;
+            padding: var(--s-16) var(--s-6);
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: var(--r-full);
+            background: linear-gradient(135deg, var(--accent-subtle), var(--primary-subtle));
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            margin-bottom: var(--s-5);
+            animation: fadeUp 0.5s var(--ease);
+        }
+
+        @media (max-width: 900px) {
+            .create-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .preview-card {
+                position: static;
+            }
+
+            .category-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <div id="navbar"></div>
+        <section class="main-content">
+            <div class="container">
+                <div class="section-header">
+                    <h1 style="font-size:1.5rem;">🎓 Create Your Academy</h1>
+                    <p>Set up a structured training program for players to enroll in</p>
+                </div>
+
+                <div id="accessDenied" style="display:none;">
+                    <div class="card text-center" style="padding:var(--s-16);">
+                        <h3>🔒 Coach Access Only</h3>
+                        <p class="text-faint mt-1">Only coaches can create academies.</p>
+                        <a href="academies.html" class="btn btn-primary mt-3">Browse Academies</a>
+                    </div>
+                </div>
+
+                <div id="createForm">
+                    <div class="create-layout">
+                        <!-- Form -->
+                        <div>
+                            <div class="card mb-3">
+                                <h3 style="margin-bottom:var(--s-5);">Academy Details</h3>
+                                <div class="form-group">
+                                    <label class="form-label">Academy Name *</label>
+                                    <input class="form-input" type="text" id="academyName"
+                                        placeholder="e.g. Elite Striker Academy" maxlength="60"
+                                        oninput="updatePreview()">
+                                    <span class="form-hint">Make it memorable — max 60 characters</span>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Description *</label>
+                                    <textarea class="form-textarea" id="academyDesc"
+                                        placeholder="Describe your training program, methodology, and what players will learn..."
+                                        rows="4" oninput="updatePreview()"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Category *</label>
+                                    <div class="category-grid" id="categoryGrid">
+                                        <div class="category-option"
+                                            onclick="selectCategory(this, 'Attack & Finishing')">
+                                            <div class="cat-icon">⚡</div>
+                                            <div class="cat-name">Attack & Finishing</div>
+                                        </div>
+                                        <div class="category-option"
+                                            onclick="selectCategory(this, 'Fitness & Conditioning')">
+                                            <div class="cat-icon">💪</div>
+                                            <div class="cat-name">Fitness & Conditioning</div>
+                                        </div>
+                                        <div class="category-option"
+                                            onclick="selectCategory(this, 'Defense & Tactics')">
+                                            <div class="cat-icon">🛡️</div>
+                                            <div class="cat-name">Defense & Tactics</div>
+                                        </div>
+                                        <div class="category-option" onclick="selectCategory(this, 'Goalkeeping')">
+                                            <div class="cat-icon">🧤</div>
+                                            <div class="cat-name">Goalkeeping</div>
+                                        </div>
+                                        <div class="category-option"
+                                            onclick="selectCategory(this, 'Midfield & Passing')">
+                                            <div class="cat-icon">🎯</div>
+                                            <div class="cat-name">Midfield & Passing</div>
+                                        </div>
+                                        <div class="category-option"
+                                            onclick="selectCategory(this, 'Youth Development')">
+                                            <div class="cat-icon">🌱</div>
+                                            <div class="cat-name">Youth Development</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card mb-3">
+                                <h3 style="margin-bottom:var(--s-5);">Schedule & Logistics</h3>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Location *</label>
+                                        <input class="form-input" type="text" id="academyLocation"
+                                            placeholder="e.g. Nasr City, Cairo" oninput="updatePreview()">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Age Group *</label>
+                                        <select class="form-select" id="academyAge" onchange="updatePreview()">
+                                            <option value="">Select age group</option>
+                                            <option value="8-14">8–14 years</option>
+                                            <option value="14-18">14–18 years</option>
+                                            <option value="16-25">16–25 years</option>
+                                            <option value="14-30">14–30 years</option>
+                                            <option value="18+">18+ years</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Schedule *</label>
+                                    <input class="form-input" type="text" id="academySchedule"
+                                        placeholder="e.g. Sun, Tue, Thu — 5:00 PM to 7:00 PM" oninput="updatePreview()">
+                                    <span class="form-hint">Include days and time range</span>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Level *</label>
+                                        <select class="form-select" id="academyLevel" onchange="updatePreview()">
+                                            <option value="">Select level</option>
+                                            <option value="Beginner">Beginner</option>
+                                            <option value="Intermediate">Intermediate</option>
+                                            <option value="Advanced">Advanced</option>
+                                            <option value="All Levels">All Levels</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Max Capacity *</label>
+                                        <input class="form-input" type="number" id="academyCapacity" min="5" max="100"
+                                            placeholder="e.g. 20" oninput="updatePreview()">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card mb-3">
+                                <h3 style="margin-bottom:var(--s-5);">Pricing</h3>
+                                <div class="form-group">
+                                    <label class="form-label">Monthly Subscription Price (EGP) *</label>
+                                    <input class="form-input" type="number" id="academyPrice" min="100" step="50"
+                                        placeholder="e.g. 800" oninput="updatePreview()">
+                                    <span class="form-hint">Players will pay this amount monthly to stay enrolled</span>
+                                </div>
+                            </div>
+
+                            <button class="btn btn-primary btn-lg btn-block animate-in" onclick="createAcademy()">
+                                ✨ Publish Academy
+                            </button>
+                        </div>
+
+                        <!-- Live Preview Sidebar -->
+                        <div class="card preview-card">
+                            <div class="preview-label">📱 Live Preview</div>
+                            <div class="preview-academy" id="previewContent">
+                                <div
+                                    style="text-align:center;padding:var(--s-8);color:var(--text-faint);font-size:0.85rem;">
+                                    Start filling the form to see a live preview
+                                </div>
+                            </div>
+                            <div class="text-xs text-faint text-center">This is how players will see your academy</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="successPanel" style="display:none;"></div>
+            </div>
+        </section>
+        <div id="footer"></div>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script src="js/roles.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        initPage('academies');
+
+        // ---- Access Control ----
+        if (!Auth.isLoggedIn()) {
+            window.location.href = 'login.html';
+        } else if (!Auth.hasRole('coach')) {
+            document.getElementById('createForm').style.display = 'none';
+            document.getElementById('accessDenied').style.display = 'block';
+        }
+
+        const user = Auth.getCurrentUser();
+        const coach = user ? getCoachByUserId(user.id) : null;
+        let selectedCategory = '';
+
+        function selectCategory(el, category) {
+            document.querySelectorAll('.category-option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedCategory = category;
+            updatePreview();
+        }
+
+        // ---- Live Preview ----
+        function updatePreview() {
+            const name = document.getElementById('academyName').value || 'Academy Name';
+            const desc = document.getElementById('academyDesc').value || 'Academy description will appear here...';
+            const location = document.getElementById('academyLocation').value || 'Location';
+            const age = document.getElementById('academyAge').value || '—';
+            const level = document.getElementById('academyLevel').value || '—';
+            const capacity = document.getElementById('academyCapacity').value || '—';
+            const price = document.getElementById('academyPrice').value || '—';
+            const schedule = document.getElementById('academySchedule').value || 'Schedule';
+            const catIcon = getCategoryIcon(selectedCategory);
+
+            document.getElementById('previewContent').innerHTML = `
+                <div style="display:flex;gap:var(--s-3);align-items:center;margin-bottom:var(--s-3);">
+                    <div style="width:40px;height:40px;border-radius:var(--r-md);background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;font-size:1.1rem;">${catIcon}</div>
+                    <div>
+                        <h4 style="font-size:0.95rem;">${name}</h4>
+                        <p class="text-xs text-faint">by ${user ? user.name : 'You'}</p>
+                    </div>
+                </div>
+                <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:var(--s-3);">
+                    ${selectedCategory ? `<span class="badge badge-primary">${selectedCategory}</span>` : ''}
+                    ${level !== '—' ? `<span class="badge badge-info">${level}</span>` : ''}
+                    ${age !== '—' ? `<span class="badge badge-neutral">${age}</span>` : ''}
+                </div>
+                <p style="font-size:0.8rem;color:var(--text-p);line-height:1.6;margin-bottom:var(--s-3);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">${desc}</p>
+                <div style="font-size:0.78rem;color:var(--text-faint);display:flex;flex-direction:column;gap:4px;margin-bottom:var(--s-3);">
+                    <span>📍 ${location}</span>
+                    <span>🗓️ ${schedule}</span>
+                    <span>👥 0/${capacity} members</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding-top:var(--s-3);border-top:1px solid var(--border);">
+                    <span class="price" style="font-size:1rem;">${price !== '—' ? price + ' EGP' : '—'}<span class="text-xs text-faint" style="font-weight:400;"> /mo</span></span>
+                    <span class="btn btn-primary btn-sm" style="pointer-events:none;opacity:0.6;font-size:0.75rem;">Enroll</span>
+                </div>
+            `;
+        }
+
+        function getCategoryIcon(category) {
+            const icons = {
+                'Attack & Finishing': '⚡', 'Fitness & Conditioning': '💪',
+                'Defense & Tactics': '🛡️', 'Goalkeeping': '🧤',
+                'Midfield & Passing': '🎯', 'Youth Development': '🌱'
+            };
+            return icons[category] || '🏟️';
+        }
+
+        // ---- Create ----
+        function createAcademy() {
+            const name = document.getElementById('academyName').value.trim();
+            const desc = document.getElementById('academyDesc').value.trim();
+            const location = document.getElementById('academyLocation').value.trim();
+            const age = document.getElementById('academyAge').value;
+            const level = document.getElementById('academyLevel').value;
+            const capacity = parseInt(document.getElementById('academyCapacity').value);
+            const price = parseInt(document.getElementById('academyPrice').value);
+            const schedule = document.getElementById('academySchedule').value.trim();
+
+            // Validation
+            if (!name) { showToast('Please enter an academy name', 'error'); return; }
+            if (!desc) { showToast('Please add a description', 'error'); return; }
+            if (!selectedCategory) { showToast('Please select a category', 'error'); return; }
+            if (!location) { showToast('Please enter a location', 'error'); return; }
+            if (!age) { showToast('Please select an age group', 'error'); return; }
+            if (!schedule) { showToast('Please enter a schedule', 'error'); return; }
+            if (!level) { showToast('Please select a level', 'error'); return; }
+            if (!capacity || capacity < 5) { showToast('Capacity must be at least 5', 'error'); return; }
+            if (!price || price < 100) { showToast('Price must be at least 100 EGP', 'error'); return; }
+
+            const academy = {
+                coachId: coach ? coach.id : null,
+                coachUserId: user.id,
+                name,
+                description: desc,
+                category: selectedCategory,
+                ageGroup: age,
+                level,
+                location,
+                schedule,
+                maxCapacity: capacity,
+                monthlyPrice: price,
+                rating: 0,
+                status: 'active',
+                createdAt: new Date().toISOString().split('T')[0]
+            };
+
+            AcademiesStore.add(academy);
+
+            // Show success
+            document.getElementById('createForm').style.display = 'none';
+            document.getElementById('successPanel').style.display = 'block';
+            document.getElementById('successPanel').innerHTML = `
+                <div class="success-panel">
+                    <div class="success-icon">🎓</div>
+                    <h2>Academy Created!</h2>
+                    <p class="text-faint" style="max-width:440px;margin:var(--s-3) auto var(--s-6);">
+                        <strong style="color:var(--text-h);">${name}</strong> is now live! Players can browse and enroll from the Academies page.
+                    </p>
+                    <div style="display:flex;gap:var(--s-3);justify-content:center;flex-wrap:wrap;">
+                        <a href="academies.html" class="btn btn-primary btn-lg">View Academies</a>
+                        <a href="academy-dashboard.html" class="btn btn-outline btn-lg">Go to Dashboard</a>
+                    </div>
+                </div>
+            `;
+
+            showToast('Academy published successfully! 🎉', 'success');
+        }
+    </script>
+</body>
+
+</html>

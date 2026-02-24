@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="Your SPORTIFY player profile — football stats, rating, reliability score, and leaderboard rank.">
+  <title>My Profile — SPORTIFY</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* ---- Global Profile Hero ---- */
+    .profile-hero {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-xl);
+      padding: var(--s-10);
+      margin-bottom: var(--s-6);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .profile-hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 90px;
+      background: linear-gradient(135deg, rgba(0, 230, 118, 0.1), rgba(0, 176, 255, 0.08), rgba(255, 82, 82, 0.05));
+    }
+
+    .profile-header {
+      display: flex;
+      gap: var(--s-6);
+      align-items: center;
+      flex-wrap: wrap;
+      position: relative;
+    }
+
+    .profile-avatar {
+      width: 88px;
+      height: 88px;
+      border-radius: var(--r-full);
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 900;
+      font-size: 2rem;
+      color: var(--bg-body);
+      flex-shrink: 0;
+      border: 3px solid var(--bg-card);
+      box-shadow: var(--primary-glow);
+    }
+
+    .profile-info {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .profile-info h1 {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      margin-bottom: 4px;
+    }
+
+    .profile-meta {
+      color: var(--text-faint);
+      font-size: 0.85rem;
+    }
+
+    .profile-badges {
+      display: flex;
+      gap: var(--s-2);
+      flex-wrap: wrap;
+      margin-top: var(--s-3);
+    }
+
+    /* ---- Sport Tabs ---- */
+    .sport-tabs {
+      display: flex;
+      gap: var(--s-2);
+      margin-bottom: var(--s-6);
+      border-bottom: 2px solid var(--border);
+      padding-bottom: var(--s-3);
+    }
+
+    .sport-tab {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 20px;
+      border-radius: var(--r-lg) var(--r-lg) 0 0;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: all var(--t-base);
+      border: 1px solid transparent;
+      border-bottom: none;
+      background: transparent;
+      color: var(--text-faint);
+    }
+
+    .sport-tab.active {
+      background: var(--bg-card);
+      color: var(--primary);
+      border-color: var(--border);
+      margin-bottom: -2px;
+      padding-bottom: 12px;
+    }
+
+    .sport-tab.disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .sport-tab .tab-icon {
+      font-size: 1.1rem;
+    }
+
+    .sport-tab .tab-badge {
+      font-size: 0.65rem;
+      padding: 2px 6px;
+      border-radius: var(--r-full);
+      background: var(--bg-elevated);
+      color: var(--text-faint);
+      font-weight: 600;
+    }
+
+    .sport-tab.active .tab-badge {
+      background: var(--primary-subtle-strong);
+      color: var(--primary);
+    }
+
+    /* ---- Quick Actions ---- */
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--s-3);
+      margin-bottom: var(--s-6);
+    }
+
+    .quick-action {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--s-2);
+      padding: var(--s-5) var(--s-3);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-xl);
+      cursor: pointer;
+      transition: all var(--t-base);
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .quick-action:hover {
+      border-color: var(--border-glow);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .quick-action.primary-action {
+      border-color: var(--primary-border);
+      background: var(--primary-subtle);
+    }
+
+    .quick-action.primary-action:hover {
+      background: var(--primary-subtle-strong);
+      box-shadow: var(--primary-glow);
+    }
+
+    .quick-action-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--r-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      background: var(--bg-elevated);
+      transition: all var(--t-base);
+    }
+
+    .quick-action.primary-action .quick-action-icon {
+      background: var(--primary);
+      color: var(--bg-body);
+    }
+
+    .quick-action:hover .quick-action-icon {
+      transform: scale(1.1);
+    }
+
+    .quick-action-label {
+      font-family: var(--font-display);
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    /* ---- Football Dashboard Grid ---- */
+    .fb-dashboard {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--s-6);
+      margin-bottom: var(--s-6);
+    }
+
+    .fb-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-xl);
+      padding: var(--s-6);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .fb-panel::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      opacity: 0.5;
+    }
+
+    .fb-panel h3 {
+      font-family: var(--font-display);
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-faint);
+      margin-bottom: var(--s-4);
+      display: flex;
+      align-items: center;
+      gap: var(--s-2);
+    }
+
+    .fb-panel.full-width {
+      grid-column: 1 / -1;
+    }
+
+    /* ---- Rating Circle ---- */
+    .rating-display {
+      display: flex;
+      align-items: center;
+      gap: var(--s-5);
+    }
+
+    .rating-circle {
+      width: 100px;
+      height: 100px;
+      border-radius: var(--r-full);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .rating-circle svg {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .rating-circle svg circle {
+      fill: none;
+      stroke-width: 6;
+      stroke-linecap: round;
+    }
+
+    .rating-circle .bg-ring {
+      stroke: var(--border);
+    }
+
+    .rating-circle .value-ring {
+      stroke: var(--primary);
+      transition: stroke-dashoffset 1s ease;
+    }
+
+    .rating-number {
+      font-family: var(--font-display);
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: var(--text-h);
+      z-index: 1;
+    }
+
+    .rating-number small {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--text-faint);
+    }
+
+    .rating-meta {
+      flex: 1;
+    }
+
+    .rating-label-big {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 1.1rem;
+      margin-bottom: 4px;
+    }
+
+    .rating-bar-container {
+      display: flex;
+      align-items: center;
+      gap: var(--s-2);
+      margin-top: var(--s-2);
+    }
+
+    .rating-bar {
+      flex: 1;
+      height: 6px;
+      border-radius: var(--r-full);
+      background: var(--bg-elevated);
+      overflow: hidden;
+    }
+
+    .rating-bar-fill {
+      height: 100%;
+      border-radius: var(--r-full);
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      transition: width 1s ease;
+    }
+
+    /* ---- Stats Row ---- */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--s-3);
+    }
+
+    .stat-mini {
+      text-align: center;
+      padding: var(--s-4) var(--s-2);
+      background: var(--bg-elevated);
+      border-radius: var(--r-lg);
+      border: 1px solid var(--border);
+    }
+
+    .stat-mini-value {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      font-weight: 900;
+    }
+
+    .stat-mini-label {
+      font-size: 0.7rem;
+      color: var(--text-faint);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-top: 2px;
+    }
+
+    /* ---- Reliability Gauge ---- */
+    .reliability-display {
+      display: flex;
+      align-items: center;
+      gap: var(--s-5);
+    }
+
+    .reliability-grade {
+      width: 72px;
+      height: 72px;
+      border-radius: var(--r-full);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 900;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+      border: 3px solid;
+    }
+
+    .reliability-grade small {
+      font-size: 0.6rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .reliability-details {
+      flex: 1;
+    }
+
+    .reliability-bar-bg {
+      height: 8px;
+      border-radius: var(--r-full);
+      background: var(--bg-elevated);
+      overflow: hidden;
+      margin-top: var(--s-2);
+    }
+
+    .reliability-bar-fill {
+      height: 100%;
+      border-radius: var(--r-full);
+      transition: width 1s ease;
+    }
+
+    .reliability-stats {
+      display: flex;
+      gap: var(--s-4);
+      margin-top: var(--s-3);
+      font-size: 0.78rem;
+      color: var(--text-faint);
+    }
+
+    .reliability-stats span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* ---- Position Badge ---- */
+    .position-display {
+      display: flex;
+      align-items: center;
+      gap: var(--s-4);
+    }
+
+    .position-badge {
+      width: 72px;
+      height: 72px;
+      border-radius: var(--r-lg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 900;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+      border: 2px solid;
+    }
+
+    .position-badge small {
+      font-size: 0.65rem;
+      font-weight: 700;
+    }
+
+    .position-meta {
+      flex: 1;
+    }
+
+    /* ---- Badges Grid ---- */
+    .badges-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: var(--s-3);
+    }
+
+    .fb-badge {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--s-1);
+      padding: var(--s-4) var(--s-2);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      text-align: center;
+      transition: all var(--t-base);
+    }
+
+    .fb-badge.earned {
+      border-color: var(--primary-border);
+      background: var(--primary-subtle);
+    }
+
+    .fb-badge.earned:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--primary-glow);
+    }
+
+    .fb-badge-icon {
+      font-size: 1.5rem;
+    }
+
+    .fb-badge-label {
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .fb-badge.locked {
+      opacity: 0.4;
+      filter: grayscale(1);
+    }
+
+    /* ---- Leaderboard Preview ---- */
+    .lb-row {
+      display: flex;
+      align-items: center;
+      gap: var(--s-3);
+      padding: var(--s-3) var(--s-4);
+      border-radius: var(--r-lg);
+      transition: all var(--t-base);
+    }
+
+    .lb-row:hover {
+      background: var(--bg-elevated);
+    }
+
+    .lb-row.is-me {
+      background: var(--primary-subtle);
+      border: 1px solid var(--primary-border);
+    }
+
+    .lb-rank {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--r-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 900;
+      font-size: 0.85rem;
+      background: var(--bg-elevated);
+      flex-shrink: 0;
+    }
+
+    .lb-rank.gold {
+      background: linear-gradient(135deg, #FFD740, #FFA000);
+      color: #1a1a1a;
+    }
+
+    .lb-rank.silver {
+      background: linear-gradient(135deg, #B0BEC5, #78909C);
+      color: #1a1a1a;
+    }
+
+    .lb-rank.bronze {
+      background: linear-gradient(135deg, #BCAAA4, #8D6E63);
+      color: #fff;
+    }
+
+    .lb-player {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .lb-player-name {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.88rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .lb-player-pos {
+      font-size: 0.72rem;
+      color: var(--text-faint);
+    }
+
+    .lb-value {
+      font-family: var(--font-display);
+      font-weight: 900;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    /* ---- Section Card (reused) ---- */
+    .section-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-xl);
+      padding: var(--s-8);
+      margin-bottom: var(--s-6);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .section-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      opacity: 0.5;
+    }
+
+    .section-card h3 {
+      font-family: var(--font-display);
+      margin-bottom: var(--s-5);
+      display: flex;
+      align-items: center;
+      gap: var(--s-2);
+    }
+
+    /* ---- Responsive ---- */
+    @media (max-width: 768px) {
+      .fb-dashboard {
+        grid-template-columns: 1fr;
+      }
+
+      .quick-actions {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .badges-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .quick-actions {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .rating-display,
+      .reliability-display,
+      .position-display {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page-wrapper">
+    <div id="navbar"></div>
+    <section class="main-content">
+      <div class="container" id="profileContent"></div>
+    </section>
+    <div id="footer"></div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/roles.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/race-guard.js"></script>
+  <script src="js/sports-config.js"></script>
+  <script src="js/player-profile.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    initPage('profile');
+    if (!Auth.requireAuth()) throw 'Not authenticated';
+
+    const user = Auth.getCurrentUser();
+    const { profile: sportProfile } = SportProfileManager.getProfile(user.id, 'football');
+    const myPitchIds = PitchesStore.filter(p => p.ownerId === user.id).map(p => p.id);
+    const bookings = BookingsStore.filter(b => b.playerId === user.id || (user.role === 'pitch_owner' && myPitchIds.includes(b.pitchId)));
+    const roleBadge = { player: 'badge-primary', pitch_owner: 'badge-warning', coach: 'badge-info', admin: 'badge-danger' };
+    const roleLabel = { player: '⚽ Player', pitch_owner: '🏟️ Pitch Owner', coach: '🧑‍🏫 Coach', admin: '⚙️ Admin' };
+
+    // ---- Compute derived data ----
+    const pos = SportProfileManager.getPositionConfig(sportProfile?.position || 'CM');
+    const skillLvl = SportProfileManager.getSkillLevel(sportProfile?.rating || 3.0);
+    const reliability = SportProfileManager.computeReliability(sportProfile || {});
+    const reliabilityGrade = SportProfileManager.getReliabilityGrade(reliability);
+    const earnedBadges = sportProfile ? SportProfileManager.getEarnedBadges(sportProfile) : [];
+    const earnedIds = earnedBadges.map(b => b.id);
+    const ratingPct = ((sportProfile?.rating || 3.0) / 5) * 100;
+    const circumference = 2 * Math.PI * 44; // SVG circle radius 44
+    const dashOffset = circumference - (ratingPct / 100) * circumference;
+
+    // ---- Leaderboard data ----
+    const topRated = PlayerLeaderboard.getTopPlayers('rating', 5);
+    const topGoals = PlayerLeaderboard.getTopPlayers('goals', 5);
+    const myRank = PlayerLeaderboard.getPlayerRank(user.id, 'rating');
+
+    // ---- Build HTML ----
+    let html = '';
+
+    // ======= GLOBAL PROFILE HERO =======
+    html += `
+    <div class="profile-hero animate-in">
+      <div class="profile-header">
+        <div class="profile-avatar">${user.name.charAt(0).toUpperCase()}</div>
+        <div class="profile-info">
+          <h1>${user.name}</h1>
+          <div class="profile-meta">${user.email}${user.phone ? ' · ' + user.phone : ''}</div>
+          <div class="profile-badges">
+            <span class="badge ${roleBadge[user.role]}">${roleLabel[user.role]}</span>
+            <span class="badge badge-neutral">📍 Cairo, Egypt</span>
+            <span class="badge badge-neutral">Joined ${formatDate(user.createdAt)}</span>
+            ${myRank ? `<span class="badge badge-primary">🏆 Rank #${myRank}</span>` : ''}
+          </div>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="Auth.logout()">Log out</button>
+      </div>
+    </div>`;
+
+    // ======= SPORT TABS =======
+    html += `
+    <div class="sport-tabs animate-in animate-delay-1">
+      <button class="sport-tab active" onclick="/* already active */">
+        <span class="tab-icon">⚽</span> Football
+        <span class="tab-badge">ACTIVE</span>
+      </button>
+      <button class="sport-tab disabled" title="Coming soon" disabled>
+        <span class="tab-icon">🎾</span> Padel
+        <span class="tab-badge">SOON</span>
+      </button>
+      <button class="sport-tab disabled" title="Coming soon" disabled>
+        <span class="tab-icon">🏀</span> Basketball
+        <span class="tab-badge">SOON</span>
+      </button>
+    </div>`;
+
+    // ======= QUICK ACTIONS (Upgrade 1) =======
+    html += `
+    <div class="quick-actions animate-in animate-delay-1">
+      <a href="matchmaking.html" class="quick-action primary-action" id="qa-join-match">
+        <div class="quick-action-icon">🤝</div>
+        <div class="quick-action-label">Join Match</div>
+      </a>
+      <a href="matchmaking.html#create" class="quick-action" id="qa-create-match">
+        <div class="quick-action-icon">➕</div>
+        <div class="quick-action-label">Create Match</div>
+      </a>
+      <a href="coaches.html" class="quick-action" id="qa-training">
+        <div class="quick-action-icon">🏋️</div>
+        <div class="quick-action-label">Get Training</div>
+      </a>
+      <a href="tournaments.html" class="quick-action" id="qa-tournament">
+        <div class="quick-action-icon">🏆</div>
+        <div class="quick-action-label">Tournament</div>
+      </a>
+    </div>`;
+
+    // ======= FOOTBALL DASHBOARD =======
+    html += `<div class="fb-dashboard animate-in animate-delay-2">`;
+
+    // --- Panel 1: Dynamic Rating (Upgrade 2) ---
+    html += `
+      <div class="fb-panel">
+        <h3>⭐ Player Rating</h3>
+        <div class="rating-display">
+          <div class="rating-circle">
+            <svg viewBox="0 0 100 100">
+              <circle class="bg-ring" cx="50" cy="50" r="44"/>
+              <circle class="value-ring" cx="50" cy="50" r="44"
+                stroke-dasharray="${circumference}"
+                stroke-dashoffset="${dashOffset}"
+                style="stroke:${skillLvl.color}"/>
+            </svg>
+            <div class="rating-number">${(sportProfile?.rating || 3.0).toFixed(1)}<small>/5</small></div>
+          </div>
+          <div class="rating-meta">
+            <div class="rating-label-big" style="color:${skillLvl.color};">${skillLvl.icon} ${skillLvl.label}</div>
+            <div style="font-size:0.8rem;color:var(--text-faint);">Based on ${sportProfile?.ratingHistory?.length || 0} events</div>
+            <div class="rating-bar-container">
+              <div class="rating-bar"><div class="rating-bar-fill" style="width:${ratingPct}%"></div></div>
+              <span style="font-size:0.75rem;color:var(--text-faint);font-weight:600;">${Math.round(ratingPct)}%</span>
+            </div>
+          </div>
+        </div>
+      </div>`;
+
+    // --- Panel 2: Position & Skill ---
+    html += `
+      <div class="fb-panel">
+        <h3>🎯 Position & Skill</h3>
+        <div class="position-display">
+          <div class="position-badge" style="border-color:${pos.color};background:${pos.color}15;color:${pos.color};">
+            ${pos.icon}
+            <small>${pos.id}</small>
+          </div>
+          <div class="position-meta">
+            <div style="font-family:var(--font-display);font-weight:800;font-size:1.1rem;">${pos.label}</div>
+            <div style="font-size:0.82rem;color:var(--text-faint);margin-top:2px;">Primary Position</div>
+            <div style="margin-top:var(--s-3);">
+              <span class="badge" style="background:${skillLvl.color}20;color:${skillLvl.color};border:1px solid ${skillLvl.color}40;">${skillLvl.icon} ${skillLvl.label}</span>
+            </div>
+          </div>
+        </div>
+      </div>`;
+
+    // --- Panel 3 (Full Width): Football Stats ---
+    html += `
+      <div class="fb-panel full-width">
+        <h3>📊 Football Stats</h3>
+        <div class="stats-row">
+          <div class="stat-mini">
+            <div class="stat-mini-value" style="color:var(--primary);">${sportProfile?.goals || 0}</div>
+            <div class="stat-mini-label">Goals</div>
+          </div>
+          <div class="stat-mini">
+            <div class="stat-mini-value" style="color:var(--accent);">${sportProfile?.assists || 0}</div>
+            <div class="stat-mini-label">Assists</div>
+          </div>
+          <div class="stat-mini">
+            <div class="stat-mini-value" style="color:var(--info);">${sportProfile?.matchesPlayed || 0}</div>
+            <div class="stat-mini-label">Matches</div>
+          </div>
+          <div class="stat-mini">
+            <div class="stat-mini-value" style="color:var(--warning);">${sportProfile?.currentStreak || 0}</div>
+            <div class="stat-mini-label">Streak 🔥</div>
+          </div>
+        </div>
+      </div>`;
+
+    // --- Panel 4: Reliability Score (Upgrade 3) ---
+    html += `
+      <div class="fb-panel">
+        <h3>✅ Reliability Score</h3>
+        <div class="reliability-display">
+          <div class="reliability-grade" style="border-color:${reliabilityGrade.color};background:${reliabilityGrade.color}10;color:${reliabilityGrade.color};">
+            ${reliabilityGrade.grade}
+            <small>${reliabilityGrade.label}</small>
+          </div>
+          <div class="reliability-details">
+            <div style="font-size:0.85rem;color:var(--text-faint);">Reliability: <strong style="color:${reliabilityGrade.color};font-family:var(--font-display);">${reliability}%</strong></div>
+            <div class="reliability-bar-bg">
+              <div class="reliability-bar-fill" style="width:${reliability}%;background:${reliabilityGrade.color};"></div>
+            </div>
+            <div class="reliability-stats">
+              <span>✅ ${sportProfile?.matchesCompleted || 0} completed</span>
+              <span>❌ ${sportProfile?.noShows || 0} no-shows</span>
+            </div>
+          </div>
+        </div>
+      </div>`;
+
+    // --- Panel 5: Badges ---
+    html += `
+      <div class="fb-panel">
+        <h3>🏅 Football Badges <span style="font-size:0.75rem;color:var(--text-faint);font-weight:400;margin-left:auto;">${earnedBadges.length}/${FOOTBALL_BADGES.length}</span></h3>
+        <div class="badges-grid">
+          ${FOOTBALL_BADGES.map(b => {
+      const earned = earnedIds.includes(b.id);
+      return `<div class="fb-badge ${earned ? 'earned' : 'locked'}" title="${b.description}">
+              <div class="fb-badge-icon">${b.icon}</div>
+              <div class="fb-badge-label">${b.label}</div>
+            </div>`;
+    }).join('')}
+        </div>
+      </div>`;
+
+    html += `</div>`; // Close fb-dashboard
+
+    // ======= LEADERBOARD PREVIEW (Upgrade 4) =======
+    html += `
+    <div class="fb-dashboard animate-in animate-delay-3">
+      <div class="fb-panel">
+        <h3>🏆 Top Rated Players</h3>
+        ${topRated.length === 0
+        ? '<p class="text-faint" style="text-align:center;padding:var(--s-6);">No player data yet</p>'
+        : topRated.map(p => {
+          const rankClass = p.rank === 1 ? 'gold' : p.rank === 2 ? 'silver' : p.rank === 3 ? 'bronze' : '';
+          const isMe = p.userId === user.id;
+          return `<div class="lb-row ${isMe ? 'is-me' : ''}">
+                <div class="lb-rank ${rankClass}">${p.rank <= 3 ? ['🥇', '🥈', '🥉'][p.rank - 1] : p.rank}</div>
+                <div class="lb-player">
+                  <div class="lb-player-name">${p.userName}${isMe ? ' (You)' : ''}</div>
+                  <div class="lb-player-pos">${p.positionConfig.icon} ${p.positionConfig.label}</div>
+                </div>
+                <div class="lb-value" style="color:${p.skillLevelConfig.color};">${p.rating.toFixed(1)}</div>
+              </div>`;
+        }).join('')}
+        <a href="leaderboard.html" class="btn btn-ghost btn-sm" style="width:100%;margin-top:var(--s-4);text-align:center;">View Full Leaderboard →</a>
+      </div>
+
+      <div class="fb-panel">
+        <h3>⚽ Top Scorers</h3>
+        ${topGoals.length === 0
+        ? '<p class="text-faint" style="text-align:center;padding:var(--s-6);">No goals recorded yet</p>'
+        : topGoals.map(p => {
+          const rankClass = p.rank === 1 ? 'gold' : p.rank === 2 ? 'silver' : p.rank === 3 ? 'bronze' : '';
+          const isMe = p.userId === user.id;
+          return `<div class="lb-row ${isMe ? 'is-me' : ''}">
+                <div class="lb-rank ${rankClass}">${p.rank <= 3 ? ['🥇', '🥈', '🥉'][p.rank - 1] : p.rank}</div>
+                <div class="lb-player">
+                  <div class="lb-player-name">${p.userName}${isMe ? ' (You)' : ''}</div>
+                  <div class="lb-player-pos">${p.positionConfig.icon} ${p.positionConfig.label}</div>
+                </div>
+                <div class="lb-value" style="color:var(--primary);">${p.goals}</div>
+              </div>`;
+        }).join('')}
+        <a href="leaderboard.html" class="btn btn-ghost btn-sm" style="width:100%;margin-top:var(--s-4);text-align:center;">View Full Leaderboard →</a>
+      </div>
+    </div>`;
+
+    // ======= BOOKINGS TABLE (existing, preserved) =======
+    html += `
+    <div class="section-card animate-in animate-delay-3">
+      <h3>📋 ${user.role === 'pitch_owner' ? 'Pitch Bookings' : 'My Bookings'}</h3>
+      ${bookings.length === 0
+        ? '<p class="text-faint text-center" style="padding:var(--s-10);">No bookings yet. <a href="pitches.html">Book your first pitch →</a></p>'
+        : `<div class="table-wrapper"><table>
+          <thead><tr><th>Pitch</th><th>Date</th><th>Time</th><th>Coach</th><th>Price</th><th>Status</th></tr></thead>
+          <tbody>${bookings.map(b => {
+          const p = PitchesStore.getById(b.pitchId);
+          const c = b.coachId ? CoachesStore.getById(b.coachId) : null;
+          const cu = c ? getUserById(c.userId) : null;
+          const sc = b.status === 'confirmed' ? 'active' : b.status === 'pending' ? 'pending' : 'inactive';
+          return `<tr>
+              <td><strong style="color:var(--text-h);">${p ? p.name : '—'}</strong><br><span class="text-xs text-faint">${p ? p.location : ''}</span></td>
+              <td>${formatDate(b.date)}</td><td>${b.timeSlot}</td>
+              <td>${cu ? cu.name : '<span class="text-faint">—</span>'}</td>
+              <td>${b.totalPrice} EGP</td>
+              <td><span class="status-dot ${sc}"></span>${b.status}</td>
+            </tr>`;
+        }).join('')}</tbody></table></div>`}
+    </div>`;
+
+    // ======= COACH SECTION (preserved) =======
+    if (user.role === 'coach') {
+      const coach = getCoachByUserId(user.id);
+      if (coach) html += `
+      <div class="section-card animate-in">
+        <h3>🧑‍🏫 Coach Profile</h3>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:var(--s-5);">
+          <div><span class="form-label">Specialty</span><p style="color:var(--text-h);font-family:var(--font-display);font-weight:600;">${coach.specialty}</p></div>
+          <div><span class="form-label">Experience</span><p style="color:var(--text-h);font-family:var(--font-display);font-weight:600;">${coach.experience} years</p></div>
+          <div><span class="form-label">Hourly Rate</span><p style="color:var(--primary);font-family:var(--font-display);font-weight:600;">${coach.hourlyRate} EGP</p></div>
+          <div><span class="form-label">Rating</span><p style="color:var(--warning);font-family:var(--font-display);font-weight:600;">${getStarRating(coach.rating)} ${coach.rating}</p></div>
+        </div>
+        <div class="mt-2"><span class="form-label">Bio</span><p class="text-faint" style="margin-top:4px;line-height:1.7;">${coach.bio}</p></div>
+      </div>`;
+    }
+
+    // ======= PITCH OWNER SECTION (preserved) =======
+    if (user.role === 'pitch_owner') {
+      const myPitches = PitchesStore.filter(p => p.ownerId === user.id);
+      html += `
+      <div class="section-card animate-in">
+        <h3>🏟️ My Pitches (${myPitches.length})</h3>
+        <div class="grid grid-2">${myPitches.map(p => `
+          <div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-lg);padding:var(--s-5);transition:all var(--t-base);">
+            <div class="card-title">${p.name}</div>
+            <div class="card-subtitle">📍 ${p.location}</div>
+            <div style="margin-top:var(--s-3);display:flex;gap:var(--s-2);align-items:center;">
+              <span class="badge badge-primary">${p.type}</span>
+              <span style="margin-left:auto;color:var(--primary);font-weight:700;font-family:var(--font-display);">${p.pricePerHour} EGP/hr</span>
+            </div>
+          </div>`).join('')}</div>
+      </div>`;
+    }
+
+    document.getElementById('profileContent').innerHTML = html;
+  </script>
+</body>
+
+</html>

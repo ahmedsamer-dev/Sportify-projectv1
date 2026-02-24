@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="SPORTIFY Player Leaderboard — Top rated players, top scorers, most reliable athletes.">
+    <title>Leaderboard — SPORTIFY</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .lb-header {
+            text-align: center;
+            padding: var(--s-12) 0 var(--s-8);
+        }
+
+        .lb-header h1 {
+            font-family: var(--font-display);
+            font-size: clamp(1.8rem, 4vw, 2.8rem);
+            margin-bottom: var(--s-2);
+        }
+
+        .lb-header p {
+            color: var(--text-faint);
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* ---- Filter Tabs ---- */
+        .lb-filters {
+            display: flex;
+            justify-content: center;
+            gap: var(--s-2);
+            margin-bottom: var(--s-8);
+            flex-wrap: wrap;
+        }
+
+        .lb-filter-btn {
+            padding: 8px 20px;
+            border-radius: var(--r-full);
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            cursor: pointer;
+            transition: all var(--t-base);
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-faint);
+        }
+
+        .lb-filter-btn.active {
+            background: var(--primary);
+            color: var(--bg-body);
+            border-color: var(--primary);
+        }
+
+        .lb-filter-btn:hover:not(.active) {
+            border-color: var(--border-glow);
+            color: var(--text-h);
+        }
+
+        /* ---- Podium ---- */
+        .podium {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: var(--s-4);
+            margin-bottom: var(--s-10);
+            padding: 0 var(--s-4);
+        }
+
+        .podium-spot {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--s-3);
+            flex: 1;
+            max-width: 200px;
+        }
+
+        .podium-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: var(--r-full);
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-display);
+            font-weight: 900;
+            font-size: 1.3rem;
+            color: var(--bg-body);
+            border: 3px solid var(--bg-card);
+            box-shadow: var(--primary-glow);
+        }
+
+        .podium-spot.first .podium-avatar {
+            width: 80px;
+            height: 80px;
+            font-size: 1.6rem;
+            box-shadow: 0 0 30px rgba(255, 215, 64, 0.4);
+            background: linear-gradient(135deg, #FFD740, #FFA000);
+            color: #1a1a1a;
+        }
+
+        .podium-info {
+            text-align: center;
+        }
+
+        .podium-name {
+            font-family: var(--font-display);
+            font-weight: 800;
+            font-size: 0.92rem;
+        }
+
+        .podium-stat {
+            font-size: 0.78rem;
+            color: var(--text-faint);
+        }
+
+        .podium-value {
+            font-family: var(--font-display);
+            font-weight: 900;
+            font-size: 1.5rem;
+        }
+
+        .podium-spot.first .podium-value {
+            font-size: 2rem;
+            color: #FFD740;
+        }
+
+        .podium-pedestal {
+            width: 100%;
+            border-radius: var(--r-lg) var(--r-lg) 0 0;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: var(--s-4);
+            font-family: var(--font-display);
+            font-weight: 900;
+            font-size: 1.5rem;
+        }
+
+        .podium-spot.first .podium-pedestal {
+            height: 120px;
+            background: linear-gradient(180deg, rgba(255, 215, 64, 0.2), rgba(255, 215, 64, 0.05));
+            border: 1px solid rgba(255, 215, 64, 0.3);
+            border-bottom: none;
+            color: #FFD740;
+        }
+
+        .podium-spot.second .podium-pedestal {
+            height: 90px;
+            background: linear-gradient(180deg, rgba(176, 190, 197, 0.15), transparent);
+            border: 1px solid rgba(176, 190, 197, 0.2);
+            border-bottom: none;
+            color: #B0BEC5;
+        }
+
+        .podium-spot.third .podium-pedestal {
+            height: 65px;
+            background: linear-gradient(180deg, rgba(188, 170, 164, 0.12), transparent);
+            border: 1px solid rgba(188, 170, 164, 0.2);
+            border-bottom: none;
+            color: #BCAAA4;
+        }
+
+        /* ---- Full Table ---- */
+        .lb-table-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--r-xl);
+            padding: var(--s-6);
+            margin-bottom: var(--s-6);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .lb-table-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            opacity: 0.5;
+        }
+
+        .lb-table-row {
+            display: flex;
+            align-items: center;
+            gap: var(--s-4);
+            padding: var(--s-4) var(--s-5);
+            border-radius: var(--r-lg);
+            transition: all var(--t-base);
+        }
+
+        .lb-table-row:hover {
+            background: var(--bg-elevated);
+        }
+
+        .lb-table-row.is-me {
+            background: var(--primary-subtle);
+            border: 1px solid var(--primary-border);
+        }
+
+        .lb-table-row+.lb-table-row {
+            border-top: 1px solid var(--border);
+        }
+
+        .lb-table-row.is-me+.lb-table-row,
+        .lb-table-row+.lb-table-row.is-me {
+            border-top-color: var(--primary-border);
+        }
+
+        .lb-t-rank {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--r-full);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-display);
+            font-weight: 900;
+            font-size: 0.85rem;
+            background: var(--bg-elevated);
+            flex-shrink: 0;
+        }
+
+        .lb-t-rank.gold {
+            background: linear-gradient(135deg, #FFD740, #FFA000);
+            color: #1a1a1a;
+        }
+
+        .lb-t-rank.silver {
+            background: linear-gradient(135deg, #B0BEC5, #78909C);
+            color: #1a1a1a;
+        }
+
+        .lb-t-rank.bronze {
+            background: linear-gradient(135deg, #BCAAA4, #8D6E63);
+            color: #fff;
+        }
+
+        .lb-t-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--r-full);
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-display);
+            font-weight: 900;
+            color: var(--bg-body);
+            flex-shrink: 0;
+        }
+
+        .lb-t-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .lb-t-name {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .lb-t-detail {
+            font-size: 0.75rem;
+            color: var(--text-faint);
+        }
+
+        .lb-t-stats {
+            display: flex;
+            gap: var(--s-6);
+            flex-shrink: 0;
+        }
+
+        .lb-t-stat {
+            text-align: center;
+        }
+
+        .lb-t-stat-val {
+            font-family: var(--font-display);
+            font-weight: 900;
+            font-size: 1.05rem;
+        }
+
+        .lb-t-stat-label {
+            font-size: 0.68rem;
+            color: var(--text-faint);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        /* ---- Compare ---- */
+        .compare-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--r-xl);
+            padding: var(--s-8);
+            margin-bottom: var(--s-6);
+        }
+
+        .compare-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--s-6);
+            margin-bottom: var(--s-6);
+        }
+
+        .compare-player {
+            text-align: center;
+        }
+
+        .compare-player .podium-avatar {
+            margin: 0 auto var(--s-2);
+        }
+
+        .compare-vs {
+            font-family: var(--font-display);
+            font-weight: 900;
+            font-size: 1.6rem;
+            color: var(--text-faint);
+        }
+
+        .compare-row {
+            display: flex;
+            align-items: center;
+            gap: var(--s-3);
+            padding: var(--s-3) 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .compare-row:last-child {
+            border-bottom: none;
+        }
+
+        .compare-val {
+            flex: 1;
+            font-family: var(--font-display);
+            font-weight: 900;
+            font-size: 1.05rem;
+        }
+
+        .compare-val.left {
+            text-align: right;
+        }
+
+        .compare-val.right {
+            text-align: left;
+        }
+
+        .compare-val.winner {
+            color: var(--primary);
+        }
+
+        .compare-val.loser {
+            color: var(--text-faint);
+        }
+
+        .compare-label {
+            width: 100px;
+            text-align: center;
+            font-size: 0.78rem;
+            color: var(--text-faint);
+            font-family: var(--font-display);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 768px) {
+            .podium {
+                gap: var(--s-2);
+            }
+
+            .lb-t-stats {
+                gap: var(--s-3);
+            }
+
+            .compare-header {
+                flex-direction: column;
+                gap: var(--s-4);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <div id="navbar"></div>
+        <section class="main-content">
+            <div class="container" id="leaderboardContent"></div>
+        </section>
+        <div id="footer"></div>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script src="js/roles.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/race-guard.js"></script>
+    <script src="js/sports-config.js"></script>
+    <script src="js/player-profile.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        initPage('leaderboard');
+
+        const me = Auth.getCurrentUser();
+        let currentMetric = 'rating';
+
+        function getMetricLabel(metric) {
+            return { rating: 'Rating', goals: 'Goals', assists: 'Assists', matchesPlayed: 'Matches', reliability: 'Reliability' }[metric] || metric;
+        }
+
+        function getMetricUnit(metric) {
+            return { rating: '', goals: '⚽', assists: '🎯', matchesPlayed: '🏟️', reliability: '%' }[metric] || '';
+        }
+
+        function getMetricColor(metric) {
+            return { rating: 'var(--warning)', goals: 'var(--primary)', assists: 'var(--accent)', matchesPlayed: 'var(--info)', reliability: 'var(--primary)' }[metric] || 'var(--text-h)';
+        }
+
+        function getPlayerValue(player, metric) {
+            if (metric === 'reliability') return player.reliability;
+            return player[metric] || 0;
+        }
+
+        function formatValue(val, metric) {
+            if (metric === 'rating') return val.toFixed(1);
+            if (metric === 'reliability') return val + '%';
+            return val;
+        }
+
+        function renderLeaderboard(metric) {
+            currentMetric = metric;
+            const players = PlayerLeaderboard.getTopPlayers(metric, 20);
+            const top3 = players.slice(0, 3);
+            const rest = players.slice(3);
+
+            let html = `
+      <div class="lb-header animate-in">
+        <span class="section-badge" style="background:var(--primary-subtle-strong);color:var(--primary);border:1px solid var(--primary-border);padding:6px 16px;border-radius:var(--r-full);font-family:var(--font-display);font-weight:700;font-size:0.72rem;letter-spacing:0.06em;text-transform:uppercase;">🏆 LEADERBOARD</span>
+        <h1>Player Rankings</h1>
+        <p>Compete, compare, and climb the leaderboard. The field is yours.</p>
+      </div>
+
+      <div class="lb-filters animate-in animate-delay-1">
+        ${['rating', 'goals', 'assists', 'matchesPlayed', 'reliability'].map(m =>
+                `<button class="lb-filter-btn ${m === metric ? 'active' : ''}" onclick="renderLeaderboard('${m}')">${getMetricLabel(m)}</button>`
+            ).join('')}
+      </div>`;
+
+            // ---- Podium (Top 3) ----
+            if (top3.length >= 3) {
+                // Order: 2nd, 1st, 3rd
+                const podiumOrder = [top3[1], top3[0], top3[2]];
+                const positions = ['second', 'first', 'third'];
+
+                html += `<div class="podium animate-in animate-delay-1">`;
+                podiumOrder.forEach((p, i) => {
+                    const medals = ['🥈', '🥇', '🥉'];
+                    const val = getPlayerValue(p, metric);
+                    const isMe = me && p.userId === me.id;
+                    html += `
+          <div class="podium-spot ${positions[i]}">
+            <div class="podium-avatar">${p.userName.charAt(0)}</div>
+            <div class="podium-info">
+              <div class="podium-name">${p.userName}${isMe ? ' ⭐' : ''}</div>
+              <div class="podium-stat">${p.positionConfig.icon} ${p.positionConfig.label}</div>
+              <div class="podium-value" style="color:${getMetricColor(metric)};">${formatValue(val, metric)}</div>
+            </div>
+            <div class="podium-pedestal">${medals[i]}</div>
+          </div>`;
+                });
+                html += `</div>`;
+            }
+
+            // ---- Full Table ----
+            html += `<div class="lb-table-card animate-in animate-delay-2">`;
+
+            players.forEach(p => {
+                const rankClass = p.rank === 1 ? 'gold' : p.rank === 2 ? 'silver' : p.rank === 3 ? 'bronze' : '';
+                const isMe = me && p.userId === me.id;
+                const val = getPlayerValue(p, metric);
+
+                html += `
+        <div class="lb-table-row ${isMe ? 'is-me' : ''}">
+          <div class="lb-t-rank ${rankClass}">${p.rank <= 3 ? ['🥇', '🥈', '🥉'][p.rank - 1] : p.rank}</div>
+          <div class="lb-t-avatar">${p.userName.charAt(0)}</div>
+          <div class="lb-t-info">
+            <div class="lb-t-name">${p.userName}${isMe ? ' (You)' : ''}</div>
+            <div class="lb-t-detail">${p.positionConfig.icon} ${p.positionConfig.label} · ${p.skillLevelConfig.icon} ${p.skillLevelConfig.label}</div>
+          </div>
+          <div class="lb-t-stats">
+            <div class="lb-t-stat">
+              <div class="lb-t-stat-val" style="color:${getMetricColor(metric)};">${formatValue(val, metric)}</div>
+              <div class="lb-t-stat-label">${getMetricLabel(metric)}</div>
+            </div>
+            <div class="lb-t-stat">
+              <div class="lb-t-stat-val">${p.matchesPlayed || 0}</div>
+              <div class="lb-t-stat-label">Matches</div>
+            </div>
+            <div class="lb-t-stat">
+              <div class="lb-t-stat-val">${p.goals || 0}</div>
+              <div class="lb-t-stat-label">Goals</div>
+            </div>
+          </div>
+        </div>`;
+            });
+
+            if (players.length === 0) {
+                html += `<p class="text-faint text-center" style="padding:var(--s-10);">No player profiles yet. <a href="profile.html">Create yours →</a></p>`;
+            }
+
+            html += `</div>`;
+
+            // ---- Player Comparison ----
+            if (me && players.length >= 2) {
+                const otherPlayer = players.find(p => p.userId !== me.id);
+                if (otherPlayer) {
+                    const comparison = PlayerLeaderboard.comparePlayers(me.id, otherPlayer.userId);
+                    if (comparison) {
+                        const m1 = comparison.player1;
+                        const m2 = comparison.player2;
+
+                        html += `
+            <div class="compare-section animate-in animate-delay-3">
+              <h3 style="font-family:var(--font-display);text-align:center;margin-bottom:var(--s-6);">⚔️ Player Comparison</h3>
+              <div class="compare-header">
+                <div class="compare-player">
+                  <div class="podium-avatar" style="margin:0 auto var(--s-2);">${m1.name?.charAt(0) || '?'}</div>
+                  <div class="podium-name">${m1.name || 'You'}</div>
+                </div>
+                <div class="compare-vs">VS</div>
+                <div class="compare-player">
+                  <div class="podium-avatar" style="margin:0 auto var(--s-2);background:linear-gradient(135deg, var(--accent), var(--info));">${m2.name?.charAt(0) || '?'}</div>
+                  <div class="podium-name">${m2.name || 'Opponent'}</div>
+                </div>
+              </div>
+
+              ${Object.entries(comparison.comparison).map(([key, data]) => {
+                            const label = getMetricLabel(key);
+                            const v1Class = data.winner === 1 ? 'winner' : data.winner === 2 ? 'loser' : '';
+                            const v2Class = data.winner === 2 ? 'winner' : data.winner === 1 ? 'loser' : '';
+                            return `<div class="compare-row">
+                  <div class="compare-val left ${v1Class}">${key === 'rating' ? data.player1.toFixed(1) : (key === 'reliability' ? data.player1 + '%' : data.player1)}</div>
+                  <div class="compare-label">${label}</div>
+                  <div class="compare-val right ${v2Class}">${key === 'rating' ? data.player2.toFixed(1) : (key === 'reliability' ? data.player2 + '%' : data.player2)}</div>
+                </div>`;
+                        }).join('')}
+            </div>`;
+                    }
+                }
+            }
+
+            document.getElementById('leaderboardContent').innerHTML = html;
+        }
+
+        // Initial render
+        renderLeaderboard('rating');
+    </script>
+</body>
+
+</html>

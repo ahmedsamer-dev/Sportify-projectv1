@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tournaments — SPORTIFY</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .tournament-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tournament-card .t-accent {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            opacity: 0;
+            transition: opacity var(--t-fast);
+        }
+
+        .tournament-card:hover .t-accent {
+            opacity: 1;
+        }
+
+        .t-meta {
+            display: flex;
+            gap: var(--s-5);
+            flex-wrap: wrap;
+            margin-top: var(--s-4);
+        }
+
+        .t-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            color: var(--text-p);
+        }
+
+        .t-meta-item strong {
+            color: var(--text-h);
+        }
+
+        .t-teams {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: var(--s-3);
+        }
+
+        .t-progress {
+            margin-top: var(--s-3);
+        }
+
+        .t-progress-bar {
+            height: 6px;
+            border-radius: var(--r-full);
+            background: var(--bg-elevated);
+            overflow: hidden;
+        }
+
+        .t-progress-fill {
+            height: 100%;
+            border-radius: var(--r-full);
+            background: var(--primary);
+            transition: width var(--t-slow);
+        }
+
+        .t-progress-label {
+            font-size: 0.75rem;
+            color: var(--text-faint);
+            margin-top: 4px;
+        }
+
+        .create-form {
+            display: none;
+        }
+
+        .create-form.show {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <div id="navbar"></div>
+        <section class="main-content">
+            <div class="container">
+                <div class="section-header flex-between" style="flex-wrap:wrap;gap:var(--s-4);">
+                    <div>
+                        <h2>Tournaments</h2>
+                        <p>Compete, connect, and win prizes</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="toggleCreate()">+ Create Tournament</button>
+                </div>
+
+                <!-- Create Form -->
+                <div class="card mb-3 create-form" id="createForm">
+                    <h3 style="margin-bottom:var(--s-5);">New Tournament</h3>
+                    <form onsubmit="createTournament(event)">
+                        <div class="form-row">
+                            <div class="form-group"><label class="form-label">Tournament Name</label><input
+                                    class="form-input" id="tName" required placeholder="e.g. Summer Cup 2026"></div>
+                            <div class="form-group"><label class="form-label">Prize</label><input class="form-input"
+                                    id="tPrize" placeholder="e.g. 5000 EGP"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label class="form-label">Start Date</label><input
+                                    class="form-input" type="date" id="tDate" required></div>
+                            <div class="form-group"><label class="form-label">Max Teams</label>
+                                <select class="form-select" id="tMax">
+                                    <option>4</option>
+                                    <option>8</option>
+                                    <option selected>16</option>
+                                    <option>32</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:var(--s-3);">
+                            <button type="submit" class="btn btn-primary">Create</button>
+                            <button type="button" class="btn btn-secondary" onclick="toggleCreate()">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Tournament Grid -->
+                <div class="grid grid-2" id="tournamentGrid"></div>
+            </div>
+        </section>
+        <div id="footer"></div>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script src="js/roles.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        initPage('tournaments');
+
+        function toggleCreate() { document.getElementById('createForm').classList.toggle('show'); }
+
+        function renderTournaments() {
+            const tournaments = TournamentsStore.getAll();
+            const statusBadge = { registration: 'badge-primary', active: 'badge-accent', completed: 'badge-neutral' };
+
+            document.getElementById('tournamentGrid').innerHTML = tournaments.length === 0
+                ? '<div class="card text-center" style="grid-column:1/-1;padding:var(--s-16);"><p class="text-faint">No tournaments yet. Create the first one!</p></div>'
+                : tournaments.map(t => {
+                    const org = getUserById(t.organizerId);
+                    const pct = Math.round((t.teams.length / t.maxTeams) * 100);
+                    const spotsLeft = t.maxTeams - t.teams.length;
+                    return `
+          <div class="card tournament-card">
+            <div class="t-accent"></div>
+            <div class="card-header">
+              <div>
+                <div class="card-title" style="font-size:1.15rem;">${t.name}</div>
+                <div class="card-subtitle">by ${org ? org.name : 'Unknown'}</div>
+              </div>
+              <span class="badge ${statusBadge[t.status] || 'badge-neutral'}">${t.status}</span>
+            </div>
+            <div class="t-meta">
+              <div class="t-meta-item">📅 <strong>${formatDate(t.startDate)}</strong></div>
+              <div class="t-meta-item">👥 <strong>${t.teams.length}/${t.maxTeams}</strong> teams</div>
+              <div class="t-meta-item">🏅 <strong>${t.prize || 'TBD'}</strong></div>
+            </div>
+            <div class="t-progress">
+              <div class="t-progress-bar"><div class="t-progress-fill" style="width:${pct}%;"></div></div>
+              <div class="t-progress-label">${spotsLeft} spot${spotsLeft !== 1 ? 's' : ''} remaining</div>
+            </div>
+            ${t.teams.length > 0 ? `<div class="t-teams">${t.teams.map(team => `<span class="badge badge-neutral">${team}</span>`).join('')}</div>` : ''}
+            <div class="card-footer">
+              <span class="text-xs text-faint">Created ${formatDate(t.startDate)}</span>
+              ${t.status === 'registration' ? `<button class="btn btn-primary btn-sm" onclick="joinTournament('${t.id}')">Join</button>` : '<span class="badge badge-neutral">Closed</span>'}
+            </div>
+          </div>`;
+                }).join('');
+        }
+
+        function createTournament(e) {
+            e.preventDefault();
+            if (!Auth.isLoggedIn()) { showToast('Please log in first', 'error'); return; }
+            const user = Auth.getCurrentUser();
+            // SPORTIFY: Only Pitch Owners can create tournaments
+            if (!RolesManager.hasRole(user, 'pitch_owner') && !RolesManager.hasRole(user, 'admin')) {
+                showToast('Only Pitch Owners can create tournaments', 'error');
+                return;
+            }
+            TournamentsStore.add({
+                name: document.getElementById('tName').value,
+                organizerId: user.id,
+                startDate: document.getElementById('tDate').value,
+                maxTeams: parseInt(document.getElementById('tMax').value),
+                teams: [],
+                playerTeams: {},
+                status: 'registration',
+                prize: document.getElementById('tPrize').value || 'TBD',
+                sportModule: 'football'
+            });
+            showToast('Tournament created!', 'success');
+            toggleCreate(); renderTournaments();
+        }
+
+        function joinTournament(id) {
+            if (!Auth.isLoggedIn()) { showToast('Please log in first', 'error'); return; }
+            const user = Auth.getCurrentUser();
+            const t = TournamentsStore.getById(id);
+            if (t.teams.length >= t.maxTeams) { showToast('Tournament is full', 'error'); return; }
+
+            // SPORTIFY: One team per player enforcement
+            const playerTeams = t.playerTeams || {};
+            if (playerTeams[user.id]) {
+                showToast(`You already joined with team "${playerTeams[user.id]}"`, 'error');
+                return;
+            }
+
+            const teamName = prompt('Enter your team name:');
+            if (!teamName) return;
+            if (t.teams.includes(teamName)) { showToast('Team name taken', 'error'); return; }
+
+            t.teams.push(teamName);
+            playerTeams[user.id] = teamName;
+            TournamentsStore.update(id, { teams: t.teams, playerTeams: playerTeams });
+            showToast(`"${teamName}" registered!`, 'success');
+            renderTournaments();
+        }
+
+        renderTournaments();
+    </script>
+</body>
+
+</html>

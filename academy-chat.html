@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SPORTIFY Academy Chat — Internal messaging between coach and academy members.">
+    <title>Academy Chat — SPORTIFY</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .chat-layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: var(--s-4);
+            height: calc(100vh - 200px);
+            min-height: 500px;
+        }
+
+        .chat-sidebar {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            overflow-y: auto;
+            padding: var(--s-4);
+        }
+
+        .chat-main {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            overflow: hidden;
+        }
+
+        .chat-header {
+            display: flex;
+            align-items: center;
+            gap: var(--s-3);
+            padding: var(--s-4) var(--s-5);
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-surface);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--s-5);
+            display: flex;
+            flex-direction: column;
+            gap: var(--s-3);
+        }
+
+        .chat-msg {
+            max-width: 75%;
+            padding: var(--s-3) var(--s-4);
+            border-radius: var(--r-lg);
+            font-size: 0.88rem;
+            line-height: 1.5;
+            animation: fadeUp 0.3s var(--ease);
+        }
+
+        .chat-msg.mine {
+            align-self: flex-end;
+            background: var(--primary);
+            color: white;
+            border-bottom-right-radius: var(--r-sm);
+        }
+
+        .chat-msg.other {
+            align-self: flex-start;
+            background: var(--bg-elevated);
+            color: var(--text-p);
+            border-bottom-left-radius: var(--r-sm);
+        }
+
+        .chat-msg-meta {
+            font-size: 0.7rem;
+            opacity: 0.6;
+            margin-top: 4px;
+        }
+
+        .chat-msg-sender {
+            font-size: 0.72rem;
+            font-weight: 700;
+            margin-bottom: 2px;
+            color: var(--primary);
+        }
+
+        .chat-msg.mine .chat-msg-sender {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .chat-input-bar {
+            display: flex;
+            gap: var(--s-2);
+            padding: var(--s-3) var(--s-4);
+            border-top: 1px solid var(--border);
+            background: var(--bg-surface);
+        }
+
+        .chat-input-bar input {
+            flex: 1;
+            background: var(--bg-input);
+            border: 1px solid var(--border-strong);
+            border-radius: var(--r-full);
+            padding: 10px 18px;
+            color: var(--text-h);
+            font-size: 0.88rem;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .chat-input-bar input:focus {
+            border-color: var(--primary);
+        }
+
+        .member-item {
+            display: flex;
+            align-items: center;
+            gap: var(--s-2);
+            padding: var(--s-2) var(--s-3);
+            border-radius: var(--r-md);
+            cursor: default;
+            font-size: 0.85rem;
+            transition: background var(--t-fast);
+        }
+
+        .member-item:hover {
+            background: var(--bg-elevated);
+        }
+
+        .member-dot {
+            width: 28px;
+            height: 28px;
+            border-radius: var(--r-full);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.7rem;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 768px) {
+            .chat-layout {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .chat-sidebar {
+                max-height: 200px;
+            }
+
+            .chat-messages {
+                min-height: 300px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <div id="navbar"></div>
+        <section class="main-content">
+            <div class="container" id="chatContent">
+                <div class="section-header">
+                    <h1>💬 Academy Chat</h1>
+                    <p>Internal chat for academy members and coach</p>
+                </div>
+                <div id="chatApp"></div>
+            </div>
+        </section>
+        <div id="footer"></div>
+    </div>
+
+    <script src="js/sports-config.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/roles.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/subscription.js"></script>
+    <script src="js/race-guard.js"></script>
+    <script src="js/chat.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        initPage('academy-chat');
+
+        if (!Auth.isLoggedIn()) {
+            window.location.href = 'login.html';
+        } else {
+            initChat();
+        }
+
+        function initChat() {
+            const user = Auth.getCurrentUser();
+            const params = new URLSearchParams(window.location.search);
+            const academyId = params.get('id');
+
+            // Find user's academies (either as coach or enrolled player)
+            const myAcademiesAsCoach = AcademiesStore.filter(a => a.coachUserId === user.id);
+            const myEnrollments = EnrollmentsStore.filter(e => e.playerId === user.id && e.status === 'active');
+            const enrolledAcademyIds = myEnrollments.map(e => e.academyId);
+            const enrolledAcademies = enrolledAcademyIds.map(id => AcademiesStore.getById(id)).filter(Boolean);
+            const allMyAcademies = [...myAcademiesAsCoach, ...enrolledAcademies.filter(a => !myAcademiesAsCoach.find(ma => ma.id === a.id))];
+
+            if (allMyAcademies.length === 0) {
+                document.getElementById('chatApp').innerHTML = `
+                    <div class="card text-center" style="padding:var(--s-16);">
+                        <h3>No Academies</h3>
+                        <p class="text-faint mt-1">You need to be enrolled in or own an academy to use chat.</p>
+                        <a href="academies.html" class="btn btn-primary mt-3">Browse Academies</a>
+                    </div>`;
+                return;
+            }
+
+            const selectedAcademy = academyId ? AcademiesStore.getById(academyId) : allMyAcademies[0];
+            if (!selectedAcademy || !AcademyChat.hasAccess(selectedAcademy.id, user.id)) {
+                document.getElementById('chatApp').innerHTML = `
+                    <div class="card text-center" style="padding:var(--s-16);">
+                        <h3>🔒 Access Denied</h3>
+                        <p class="text-faint mt-1">You don't have access to this academy's chat.</p>
+                    </div>`;
+                return;
+            }
+
+            const isCoach = selectedAcademy.coachUserId === user.id;
+
+            function render() {
+                const messages = AcademyChat.getMessages(selectedAcademy.id);
+                const members = AcademyChat.getMembers(selectedAcademy.id);
+                AcademyChat.markAsRead(selectedAcademy.id, user.id);
+
+                document.getElementById('chatApp').innerHTML = `
+                    <div class="chat-layout">
+                        <div class="chat-sidebar">
+                            <h4 style="margin-bottom:var(--s-3);font-size:0.82rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-faint);">Members (${members.length})</h4>
+                            ${members.map(m => `
+                                <div class="member-item">
+                                    <div class="member-dot" style="background:${m.role === 'coach' ? 'var(--primary)' : 'var(--accent)'};">${m.name.charAt(0)}</div>
+                                    <div>
+                                        <div style="font-weight:600;color:var(--text-h);">${m.name}</div>
+                                        <div class="text-xs text-faint">${m.role === 'coach' ? '🧑‍🏫 Coach' : '⚽ Player'}</div>
+                                    </div>
+                                </div>
+                            `).join('')}
+
+                            ${allMyAcademies.length > 1 ? `
+                            <div style="margin-top:var(--s-4);padding-top:var(--s-4);border-top:1px solid var(--border);">
+                                <h4 style="margin-bottom:var(--s-3);font-size:0.82rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-faint);">Switch Academy</h4>
+                                ${allMyAcademies.map(a => `
+                                    <a href="academy-chat.html?id=${a.id}" class="member-item" style="text-decoration:none;${a.id === selectedAcademy.id ? 'background:var(--primary-subtle);' : ''}">
+                                        <div class="member-dot" style="background:var(--primary);">🎓</div>
+                                        <div style="font-weight:600;color:var(--text-h);font-size:0.82rem;">${a.name}</div>
+                                    </a>
+                                `).join('')}
+                            </div>` : ''}
+                        </div>
+
+                        <div class="chat-main">
+                            <div class="chat-header">
+                                <div class="member-dot" style="background:var(--primary);">🎓</div>
+                                <div>
+                                    <div style="font-weight:700;color:var(--text-h);">${selectedAcademy.name}</div>
+                                    <div class="text-xs text-faint">${members.length} members · ${isCoach ? 'You are the coach' : 'You are enrolled'}</div>
+                                </div>
+                            </div>
+
+                            <div class="chat-messages" id="chatMessages">
+                                ${messages.length === 0 ? '<p class="text-faint text-center" style="margin:auto;">No messages yet. Say hello! 👋</p>' : ''}
+                                ${messages.map(m => `
+                                    <div class="chat-msg ${m.senderId === user.id ? 'mine' : 'other'}">
+                                        ${m.senderId !== user.id ? `<div class="chat-msg-sender">${m.senderName} ${m.senderRole === 'coach' ? '🧑‍🏫' : ''}</div>` : ''}
+                                        <div>${m.message}</div>
+                                        <div class="chat-msg-meta">${formatTimeAgo(m.timestamp)}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+
+                            <div class="chat-input-bar">
+                                <input type="text" id="chatInput" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendMsg()">
+                                <button class="btn btn-primary" onclick="sendMsg()">Send</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Scroll to bottom
+                const msgArea = document.getElementById('chatMessages');
+                if (msgArea) msgArea.scrollTop = msgArea.scrollHeight;
+            }
+
+            window.sendMsg = function () {
+                const input = document.getElementById('chatInput');
+                if (!input || !input.value.trim()) return;
+
+                const role = isCoach ? 'coach' : 'player';
+                AcademyChat.sendMessage(selectedAcademy.id, user.id, user.name, role, input.value);
+                render();
+            };
+
+            render();
+        }
+    </script>
+</body>
+
+</html>

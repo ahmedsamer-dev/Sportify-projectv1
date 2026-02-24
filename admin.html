@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel — SPORTIFY</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .admin-tabs {
+            display: flex;
+            gap: 2px;
+            margin-bottom: var(--s-6);
+            background: var(--bg-card);
+            border-radius: var(--r-lg);
+            padding: 4px;
+            border: 1px solid var(--border);
+        }
+
+        .admin-tab {
+            flex: 1;
+            padding: 10px 16px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.82rem;
+            color: var(--text-faint);
+            border-radius: var(--r-md);
+            transition: all var(--t-fast);
+            background: none;
+            border: none;
+        }
+
+        .admin-tab:hover {
+            color: var(--text-p);
+        }
+
+        .admin-tab.active {
+            color: var(--text-h);
+            background: var(--bg-elevated);
+            box-shadow: var(--shadow-xs);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .stat-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--s-4);
+            margin-bottom: var(--s-8);
+        }
+
+        .stat-card .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--r-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            margin-bottom: var(--s-3);
+        }
+
+        @media(max-width:768px) {
+            .stat-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .admin-tabs {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <div id="navbar"></div>
+        <section class="main-content">
+            <div class="container">
+                <div class="section-header"
+                    style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:var(--s-3);">
+                    <div>
+                        <h2>Admin Dashboard</h2>
+                        <p>Manage platform users, pitches, bookings, and content</p>
+                    </div>
+                    <button class="btn btn-danger btn-sm" onclick="resetAllDemoData()">🔄 Reset Demo Data</button>
+                </div>
+
+                <!-- Stats -->
+                <div class="stat-row" id="adminStats"></div>
+
+                <!-- Tabs -->
+                <div class="admin-tabs">
+                    <button class="admin-tab active" onclick="switchTab('users',this)">Users</button>
+                    <button class="admin-tab" onclick="switchTab('pitches',this)">Pitches</button>
+                    <button class="admin-tab" onclick="switchTab('bookings',this)">Bookings</button>
+                    <button class="admin-tab" onclick="switchTab('tournaments',this)">Tournaments</button>
+                    <button class="admin-tab" onclick="switchTab('videos',this)">Videos</button>
+                </div>
+
+                <div id="users" class="tab-content active"></div>
+                <div id="pitches" class="tab-content"></div>
+                <div id="bookings" class="tab-content"></div>
+                <div id="tournaments" class="tab-content"></div>
+                <div id="videos" class="tab-content"></div>
+            </div>
+        </section>
+        <div id="footer"></div>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script src="js/roles.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        initPage('admin');
+
+        // Guard: only admin role can access this page
+        if (!Auth.isLoggedIn() || !Auth.hasRole('admin')) {
+            window.location.href = 'index.html';
+            throw new Error('Access denied');
+        }
+
+        const roleLabel = { player: 'Player', pitch_owner: 'Pitch Owner', coach: 'Coach', admin: 'Admin' };
+        const roleBadge = { player: 'badge-primary', pitch_owner: 'badge-warning', coach: 'badge-info', admin: 'badge-danger' };
+
+        function switchTab(tab, btn) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(tab).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        function renderAdmin() {
+            const users = UsersStore.getAll(), pitches = PitchesStore.getAll(), bookings = BookingsStore.getAll(), tournaments = TournamentsStore.getAll(), videos = VideosStore.getAll();
+            const revenue = bookings.reduce((s, b) => s + b.totalPrice, 0);
+
+            // Stats
+            document.getElementById('adminStats').innerHTML = `
+        <div class="stat-card"><div class="stat-icon" style="background:var(--primary-subtle);">👥</div><div class="stat-value">${users.length}</div><div class="stat-label">Users</div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:var(--accent-subtle);">🏟️</div><div class="stat-value">${pitches.length}</div><div class="stat-label">Pitches</div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:var(--info-subtle);">📋</div><div class="stat-value">${bookings.length}</div><div class="stat-label">Bookings</div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:var(--warning-subtle);">💰</div><div class="stat-value">${revenue.toLocaleString()}</div><div class="stat-label">Revenue (EGP)</div></div>`;
+
+            // Users
+            document.getElementById('users').innerHTML = `<div class="table-wrapper"><table>
+        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th></th></tr></thead>
+        <tbody>${users.map(u => `<tr>
+          <td style="font-weight:600;color:var(--text-h);">${u.name}</td>
+          <td>${u.email}</td>
+          <td><span class="badge ${roleBadge[u.role]}">${roleLabel[u.role]}</span></td>
+          <td class="text-faint">${formatDate(u.createdAt)}</td>
+          <td>${u.role !== 'admin' ? `<button class="btn btn-sm btn-ghost" style="color:var(--danger);" onclick="deleteUser('${u.id}')">Delete</button>` : ''}</td>
+        </tr>`).join('')}</tbody></table></div>`;
+
+            // Pitches
+            document.getElementById('pitches').innerHTML = `<div class="table-wrapper"><table>
+        <thead><tr><th>Name</th><th>Location</th><th>Type</th><th>Price/hr</th><th>Rating</th><th>Owner</th></tr></thead>
+        <tbody>${pitches.map(p => {
+                const o = getUserById(p.ownerId); return `<tr>
+          <td style="font-weight:600;color:var(--text-h);">${p.name}</td>
+          <td>${p.location}</td>
+          <td><span class="badge badge-primary">${p.type}</span></td>
+          <td>${p.pricePerHour} EGP</td>
+          <td style="color:var(--warning);">${getStarRating(p.rating)} ${p.rating}</td>
+          <td class="text-faint">${o ? o.name : '—'}</td>
+        </tr>`;
+            }).join('')}</tbody></table></div>`;
+
+            // Bookings
+            document.getElementById('bookings').innerHTML = `<div class="table-wrapper"><table>
+        <thead><tr><th>Pitch</th><th>Player</th><th>Date</th><th>Time</th><th>Price</th><th>Status</th></tr></thead>
+        <tbody>${bookings.map(b => {
+                const p = PitchesStore.getById(b.pitchId); const u = getUserById(b.playerId); const sc = b.status === 'confirmed' ? 'active' : b.status === 'pending' ? 'pending' : 'inactive'; return `<tr>
+          <td style="font-weight:600;color:var(--text-h);">${p ? p.name : '—'}</td>
+          <td>${u ? u.name : '—'}</td>
+          <td>${formatDate(b.date)}</td><td>${b.timeSlot}</td>
+          <td>${b.totalPrice} EGP</td>
+          <td><span class="status-dot ${sc}"></span>${b.status}</td>
+        </tr>`;
+            }).join('')}</tbody></table></div>`;
+
+            // Tournaments
+            document.getElementById('tournaments').innerHTML = `<div class="table-wrapper"><table>
+        <thead><tr><th>Name</th><th>Organizer</th><th>Date</th><th>Teams</th><th>Prize</th><th>Status</th></tr></thead>
+        <tbody>${tournaments.map(t => {
+                const o = getUserById(t.organizerId); return `<tr>
+          <td style="font-weight:600;color:var(--text-h);">${t.name}</td>
+          <td>${o ? o.name : '—'}</td>
+          <td>${formatDate(t.startDate)}</td>
+          <td>${t.teams.length}/${t.maxTeams}</td>
+          <td>${t.prize}</td>
+          <td><span class="badge badge-primary">${t.status}</span></td>
+        </tr>`;
+            }).join('')}</tbody></table></div>`;
+
+            // Videos
+            document.getElementById('videos').innerHTML = `<div class="table-wrapper"><table>
+        <thead><tr><th>Title</th><th>User</th><th>Likes</th><th>Date</th><th></th></tr></thead>
+        <tbody>${videos.map(v => {
+                const u = getUserById(v.userId); return `<tr>
+          <td style="font-weight:600;color:var(--text-h);">${v.title}</td>
+          <td>${u ? u.name : '—'}</td>
+          <td>♥ ${v.likes}</td>
+          <td class="text-faint">${formatDate(v.createdAt)}</td>
+          <td><button class="btn btn-sm btn-ghost" style="color:var(--danger);" onclick="deleteVideo('${v.id}')">Remove</button></td>
+        </tr>`;
+            }).join('')}</tbody></table></div>`;
+        }
+
+        function deleteUser(id) { if (confirm('Delete this user?')) { UsersStore.delete(id); showToast('User deleted', 'success'); renderAdmin(); } }
+        function deleteVideo(id) { if (confirm('Remove this video?')) { VideosStore.delete(id); showToast('Video removed', 'success'); renderAdmin(); } }
+
+        renderAdmin();
+    </script>
+</body>
+
+</html>

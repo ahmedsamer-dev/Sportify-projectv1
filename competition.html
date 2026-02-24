@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goal Competition — SPORTIFY</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .comp-layout {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: var(--s-6);
+            align-items: start;
+        }
+
+        .video-thumb {
+            width: 100%;
+            height: 200px;
+            border-radius: var(--r-md);
+            background: var(--bg-elevated);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all var(--t-base);
+            margin-bottom: var(--s-4);
+        }
+
+        .video-thumb:hover {
+            background: var(--bg-card);
+            border: 1px solid var(--primary-border);
+        }
+
+        .video-thumb .play-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--r-full);
+            background: var(--primary-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .like-btn {
+            background: none;
+            border: 1px solid var(--border-strong);
+            border-radius: var(--r-full);
+            padding: 6px 14px;
+            color: var(--text-p);
+            cursor: pointer;
+            transition: all var(--t-fast);
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .like-btn:hover,
+        .like-btn.liked {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .lb-item {
+            display: flex;
+            align-items: center;
+            gap: var(--s-3);
+            padding: var(--s-3) 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .lb-item:last-child {
+            border-bottom: none;
+        }
+
+        .lb-rank {
+            width: 28px;
+            height: 28px;
+            border-radius: var(--r-full);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .lb-rank.r1 {
+            background: rgba(255, 215, 0, 0.15);
+            color: #FFD700;
+        }
+
+        .lb-rank.r2 {
+            background: rgba(192, 192, 192, 0.15);
+            color: #C0C0C0;
+        }
+
+        .lb-rank.r3 {
+            background: rgba(205, 127, 50, 0.15);
+            color: #CD7F32;
+        }
+
+        .lb-rank.rn {
+            background: var(--bg-elevated);
+            color: var(--text-faint);
+        }
+
+        .upload-form {
+            display: none;
+        }
+
+        .upload-form.show {
+            display: block;
+        }
+
+        .sidebar-sticky {
+            position: sticky;
+            top: 80px;
+        }
+
+        @media(max-width:900px) {
+            .comp-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar-sticky {
+                position: static;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <div id="navbar"></div>
+        <section class="main-content">
+            <div class="container">
+                <div class="section-header flex-between" style="flex-wrap:wrap;gap:var(--s-4);">
+                    <div>
+                        <h2>Weekly Goal Competition</h2>
+                        <p>Upload your best goal — <strong>Week #8</strong></p>
+                    </div>
+                    <button class="btn btn-primary" onclick="toggleUpload()">Upload Video</button>
+                </div>
+
+                <!-- Upload Form -->
+                <div class="card mb-3 upload-form" id="uploadForm">
+                    <h3 style="margin-bottom:var(--s-5);">Submit Your Goal</h3>
+                    <form onsubmit="uploadVideo(event)">
+                        <div class="form-group">
+                            <label class="form-label">Goal Title</label>
+                            <input class="form-input" id="vTitle" placeholder="e.g. Insane Long Shot!" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Video URL</label>
+                            <input class="form-input" id="vUrl" placeholder="Paste a YouTube or video link" required>
+                            <span class="form-hint">Direct links or YouTube URLs supported</span>
+                        </div>
+                        <div style="display:flex;gap:var(--s-3);">
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                            <button type="button" class="btn btn-secondary" onclick="toggleUpload()">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="comp-layout">
+                    <!-- Feed -->
+                    <div>
+                        <h4 class="text-faint mb-2"
+                            style="text-transform:uppercase;letter-spacing:0.05em;font-size:0.75rem;">Goal Feed</h4>
+                        <div class="flex-col" id="videoFeed"></div>
+                    </div>
+
+                    <!-- Leaderboard -->
+                    <div class="card sidebar-sticky">
+                        <h4 style="margin-bottom:var(--s-4);">Leaderboard</h4>
+                        <div id="leaderboard"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <div id="footer"></div>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script src="js/roles.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        initPage('competition');
+
+        function toggleUpload() { document.getElementById('uploadForm').classList.toggle('show'); }
+
+        function render() {
+            const videos = VideosStore.getAll().sort((a, b) => b.likes - a.likes);
+
+            // Feed
+            document.getElementById('videoFeed').innerHTML = videos.length === 0
+                ? '<div class="card text-center" style="padding:var(--s-16);"><p class="text-faint">No goals uploaded yet. Be the first!</p></div>'
+                : videos.map(v => {
+                    const u = getUserById(v.userId);
+                    return `
+          <div class="card">
+            <div class="video-thumb" onclick="showToast('Video playback coming soon','info')">
+              <div class="play-icon">▶</div>
+              <span class="text-xs text-faint">Click to play</span>
+            </div>
+            <div class="flex-between" style="flex-wrap:wrap;gap:var(--s-3);">
+              <div class="flex" style="gap:var(--s-3);">
+                <div class="nav-avatar" style="width:36px;height:36px;font-size:0.8rem;">${u ? u.name.charAt(0) : '?'}</div>
+                <div>
+                  <div style="font-weight:600;color:var(--text-h);font-size:0.95rem;">${v.title}</div>
+                  <div class="text-xs text-faint">${u ? u.name : 'Unknown'} · ${formatDate(v.createdAt)}</div>
+                </div>
+              </div>
+              <button class="like-btn" onclick="likeVideo('${v.id}',this)">♥ <span>${v.likes}</span></button>
+            </div>
+          </div>`;
+                }).join('');
+
+            // Leaderboard
+            const ranked = videos.slice(0, 5);
+            const rClasses = ['r1', 'r2', 'r3', 'rn', 'rn'];
+            document.getElementById('leaderboard').innerHTML = ranked.length === 0
+                ? '<p class="text-faint text-center text-sm" style="padding:var(--s-6);">No entries yet</p>'
+                : ranked.map((v, i) => {
+                    const u = getUserById(v.userId);
+                    return `<div class="lb-item">
+            <div class="lb-rank ${rClasses[i]}">${i + 1}</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-weight:600;font-size:0.85rem;color:var(--text-h);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${v.title}</div>
+              <div class="text-xs text-faint">${u ? u.name : 'Unknown'}</div>
+            </div>
+            <div style="font-weight:700;font-size:0.85rem;color:var(--text-p);">♥ ${v.likes}</div>
+          </div>`;
+                }).join('');
+        }
+
+        function uploadVideo(e) {
+            e.preventDefault();
+            if (!Auth.isLoggedIn()) { showToast('Please log in first', 'error'); return; }
+            VideosStore.add({ userId: Auth.getCurrentUser().id, title: document.getElementById('vTitle').value, videoUrl: document.getElementById('vUrl').value, likes: 0, createdAt: new Date().toISOString().split('T')[0], weekNumber: 8 });
+            showToast('Goal uploaded!', 'success');
+            toggleUpload(); render();
+        }
+
+        function likeVideo(id, btn) {
+            if (!Auth.isLoggedIn()) { showToast('Please log in to like', 'error'); return; }
+            const user = Auth.getCurrentUser();
+            // Like-once protection
+            const likesMap = DB.getOne('sportify_video_likes') || {};
+            const key = `${id}_${user.id}`;
+            if (likesMap[key]) {
+                showToast('You already liked this video!', 'error');
+                return;
+            }
+            likesMap[key] = true;
+            DB.setOne('sportify_video_likes', likesMap);
+            const v = VideosStore.getById(id);
+            VideosStore.update(id, { likes: v.likes + 1 });
+            btn.classList.add('liked');
+            render();
+        }
+
+        render();
+    </script>
+</body>
+
+</html>

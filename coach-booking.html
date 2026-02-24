@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Book a private or group training session with an expert football coach on SPORTIFY.">
+    <title>Book a Training Session — SPORTIFY</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .booking-layout {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: var(--s-6);
+            align-items: start;
+        }
+
+        /* Steps */
+        .steps {
+            display: flex;
+            gap: var(--s-2);
+            margin-bottom: var(--s-8);
+        }
+
+        .step-item {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: var(--s-3);
+            padding: var(--s-3) var(--s-4);
+            border-radius: var(--r-md);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-faint);
+            transition: all var(--t-fast);
+        }
+
+        .step-num {
+            width: 26px;
+            height: 26px;
+            border-radius: var(--r-full);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-elevated);
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .step-item.active {
+            border-color: var(--primary-border);
+            color: var(--primary);
+        }
+
+        .step-item.active .step-num {
+            background: var(--primary);
+            color: white;
+        }
+
+        .step-item.done {
+            border-color: var(--accent);
+            color: var(--accent);
+            opacity: 0.7;
+        }
+
+        .step-item.done .step-num {
+            background: var(--accent);
+            color: white;
+        }
+
+        /* Time grid */
+        .time-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--s-2);
+        }
+
+        .time-slot {
+            padding: var(--s-3);
+            border: 1px solid var(--border-strong);
+            border-radius: var(--r-md);
+            text-align: center;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.85rem;
+            color: var(--text-p);
+            transition: all var(--t-fast);
+            background: var(--bg-surface);
+        }
+
+        .time-slot:hover {
+            border-color: var(--primary-border);
+            color: var(--text-h);
+        }
+
+        .time-slot.selected {
+            border-color: var(--primary);
+            background: var(--primary-subtle);
+            color: var(--primary);
+        }
+
+        /* Session type cards */
+        .session-type-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--s-3);
+            margin-bottom: var(--s-5);
+        }
+
+        .session-type-card {
+            padding: var(--s-5);
+            border: 2px solid var(--border-strong);
+            border-radius: var(--r-lg);
+            cursor: pointer;
+            text-align: center;
+            transition: all var(--t-fast);
+            background: var(--bg-surface);
+        }
+
+        .session-type-card:hover {
+            border-color: var(--primary-border);
+        }
+
+        .session-type-card.selected {
+            border-color: var(--primary);
+            background: var(--primary-subtle);
+        }
+
+        .session-type-icon {
+            font-size: 2rem;
+            margin-bottom: var(--s-2);
+        }
+
+        .session-type-label {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--text-h);
+        }
+
+        .session-type-desc {
+            font-size: 0.78rem;
+            color: var(--text-faint);
+            margin-top: 4px;
+        }
+
+        /* Summary */
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.875rem;
+        }
+
+        .summary-row:last-child {
+            border-bottom: none;
+        }
+
+        .summary-total {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        /* Sidebar */
+        .sidebar-card {
+            position: sticky;
+            top: 80px;
+        }
+
+        .coach-sidebar-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: var(--r-full);
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: white;
+            margin: 0 auto var(--s-4);
+        }
+
+        @media (max-width:900px) {
+            .booking-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar-card {
+                position: static;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <div id="navbar"></div>
+        <section class="main-content">
+            <div class="container">
+                <div class="section-header">
+                    <h2>🧑‍🏫 Book a Training Session</h2>
+                    <p>Schedule a private or group session with your chosen coach</p>
+                </div>
+
+                <!-- Steps indicator -->
+                <div class="steps">
+                    <div class="step-item active" id="s1"><span class="step-num">1</span>Session Details</div>
+                    <div class="step-item" id="s2"><span class="step-num">2</span>Schedule</div>
+                    <div class="step-item" id="s3"><span class="step-num">3</span>Confirm</div>
+                </div>
+
+                <div class="booking-layout" id="bookingContent">
+                    <div>
+                        <!-- Step 1: Session Type -->
+                        <div id="step1" class="card">
+                            <h3 class="cb-heading">What type of session?</h3>
+                            <div class="session-type-grid">
+                                <div class="session-type-card selected" onclick="selectSessionType(this, 'private')">
+                                    <div class="session-type-icon">🏃</div>
+                                    <div class="session-type-label">Private Session</div>
+                                    <div class="session-type-desc">1-on-1 focused training</div>
+                                </div>
+                                <div class="session-type-card" onclick="selectSessionType(this, 'group')">
+                                    <div class="session-type-icon">👥</div>
+                                    <div class="session-type-label">Group Session</div>
+                                    <div class="session-type-desc">Train with 2–5 players</div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Training Focus *</label>
+                                <select class="form-select" id="trainingFocus">
+                                    <option value="General Training">General Training</option>
+                                    <option value="Finishing Drills">Finishing Drills</option>
+                                    <option value="Fitness & Speed">Fitness & Speed</option>
+                                    <option value="Defensive Techniques">Defensive Techniques</option>
+                                    <option value="Positioning & Movement">Positioning & Movement</option>
+                                    <option value="Passing & Ball Control">Passing & Ball Control</option>
+                                    <option value="Goalkeeping">Goalkeeping</option>
+                                    <option value="Match Preparation">Match Preparation</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Notes for the Coach (optional)</label>
+                                <textarea class="form-textarea" id="sessionNotes" rows="3"
+                                    placeholder="e.g. I want to work on my weak foot, specific areas to focus on..."></textarea>
+                            </div>
+
+                            <button class="btn btn-primary btn-block mt-4" onclick="goToStep(2)">Continue to Schedule
+                                →</button>
+                        </div>
+
+                        <!-- Step 2: Schedule -->
+                        <div id="step2" class="card" style="display:none;">
+                            <h3 class="cb-heading">Choose Date & Time</h3>
+                            <div class="form-group">
+                                <label class="form-label">Date *</label>
+                                <input class="form-input" type="date" id="sessionDate" required>
+                            </div>
+                            <label class="form-label cb-time-label">Time Slot</label>
+                            <div class="time-grid" id="timeSlots"></div>
+                            <div class="cb-step-actions">
+                                <button class="btn btn-secondary cb-back-btn" onclick="goToStep(1)">← Back</button>
+                                <button class="btn btn-primary cb-next-btn" onclick="goToStep(3)">Continue →</button>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Confirm -->
+                        <div id="step3" class="card" style="display:none;">
+                            <h3 class="cb-heading">Confirm Your Booking</h3>
+                            <p class="text-sm text-faint cb-confirm-desc">The coach will review your request and confirm
+                                the session.</p>
+                            <div id="confirmDetails"></div>
+                            <div class="cb-step-actions">
+                                <button class="btn btn-secondary cb-back-btn" onclick="goToStep(2)">← Back</button>
+                                <button class="btn btn-accent btn-lg cb-confirm-btn" onclick="confirmBooking()">Send
+                                    Booking Request</button>
+                            </div>
+                        </div>
+
+                        <!-- Info banner -->
+                        <div class="card cb-info-banner">
+                            <p class="text-sm cb-info-text">
+                                ⚽ <strong>Looking for a pitch instead?</strong>
+                                <a href="pitches.html" class="cb-info-link">Browse Pitches</a> to book a
+                                football pitch for a match.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Sidebar: Coach Info -->
+                    <div class="card sidebar-card" id="coachSummary"></div>
+                </div>
+            </div>
+        </section>
+        <div id="footer"></div>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script src="js/roles.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        initPage('coaches');
+
+        const params = new URLSearchParams(window.location.search);
+        const coachId = params.get('coach') || CoachesStore.getAll()[0]?.id;
+        const coach = CoachesStore.getById(coachId);
+        const coachUser = coach ? getUserById(coach.userId) : null;
+
+        let selectedSessionType = 'private';
+        let selectedSlot = null;
+
+        if (!coach) {
+            document.getElementById('bookingContent').innerHTML = '<div class="card text-center" style="grid-column:1/-1;padding:var(--s-16);"><h3>Coach not found</h3><a href="coaches.html" class="btn btn-primary mt-3">Browse Coaches</a></div>';
+        } else {
+            // Sidebar
+            const coachAcademies = AcademiesStore.filter(a => a.coachId === coach.id);
+            const totalSessions = CoachBookingsStore.filter(b => b.coachId === coach.id && b.status === 'confirmed').length;
+
+            document.getElementById('coachSummary').innerHTML = `
+                <div class="coach-sidebar-avatar">${coachUser ? coachUser.name.charAt(0).toUpperCase() : 'C'}</div>
+                <h3 class="text-center">${coachUser ? coachUser.name : 'Coach'}</h3>
+                <p class="text-sm text-faint text-center">${coach.specialty}</p>
+                <div class="text-center" style="color:var(--warning);margin-top:var(--s-2);">${getStarRating(coach.rating)} ${coach.rating}</div>
+                <div style="display:flex;flex-wrap:wrap;gap:var(--s-2);justify-content:center;margin-top:var(--s-3);">
+                    <span class="badge badge-info">${coach.experience} yrs exp</span>
+                    <span class="badge badge-neutral">${totalSessions} sessions</span>
+                    ${coachAcademies.length > 0 ? `<span class="badge badge-primary">🎓 Academy</span>` : ''}
+                </div>
+                <p class="text-sm" style="margin-top:var(--s-4);color:var(--text-p);text-align:center;">${coach.bio}</p>
+                <div style="margin-top:var(--s-5);padding-top:var(--s-4);border-top:1px solid var(--border);text-align:center;">
+                    <span class="price" style="font-size:1.3rem;">${coach.hourlyRate} EGP</span>
+                    <span class="text-sm text-faint">/ hour</span>
+                </div>`;
+
+            // Set date constraints
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('sessionDate').value = tomorrow.toISOString().split('T')[0];
+            document.getElementById('sessionDate').min = new Date().toISOString().split('T')[0];
+
+            // Time slots for coach (different from pitch — more flexible)
+            const slots = ['08:00–09:00', '09:00–10:00', '10:00–11:00', '14:00–15:00', '15:00–16:00', '16:00–17:00', '17:00–18:00', '18:00–19:00', '19:00–20:00'];
+            document.getElementById('timeSlots').innerHTML = slots.map(s => `<div class="time-slot" onclick="selectSlot(this,'${s}')">${s}</div>`).join('');
+        }
+
+        function selectSessionType(el, type) {
+            document.querySelectorAll('.session-type-card').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedSessionType = type;
+        }
+
+        function selectSlot(el, slot) {
+            document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedSlot = slot;
+        }
+
+        function goToStep(step) {
+            if (step === 3 && !selectedSlot) { showToast('Please select a time slot', 'error'); return; }
+            document.querySelectorAll('[id^="step"]').forEach(el => { if (el.id.match(/^step\d$/)) el.style.display = 'none'; });
+            document.getElementById('step' + step).style.display = 'block';
+
+            ['s1', 's2', 's3'].forEach((id, i) => {
+                const el = document.getElementById(id);
+                el.classList.remove('active', 'done');
+                if (i + 1 < step) el.classList.add('done');
+                if (i + 1 === step) el.classList.add('active');
+            });
+            if (step === 3) renderConfirmation();
+        }
+
+        function renderConfirmation() {
+            const date = document.getElementById('sessionDate').value;
+            const focus = document.getElementById('trainingFocus').value;
+            const notes = document.getElementById('sessionNotes').value.trim();
+
+            document.getElementById('confirmDetails').innerHTML = `
+                <div class="summary-row"><span class="text-faint">Coach</span><strong>${coachUser ? coachUser.name : 'Coach'}</strong></div>
+                <div class="summary-row"><span class="text-faint">Specialty</span><span>${coach.specialty}</span></div>
+                <div class="summary-row"><span class="text-faint">Session Type</span><span class="badge ${selectedSessionType === 'private' ? 'badge-info' : 'badge-primary'}">${selectedSessionType === 'private' ? '🏃 Private' : '👥 Group'}</span></div>
+                <div class="summary-row"><span class="text-faint">Training Focus</span><span>${focus}</span></div>
+                <div class="summary-row"><span class="text-faint">Date</span><span>${formatDate(date)}</span></div>
+                <div class="summary-row"><span class="text-faint">Time</span><span>${selectedSlot}</span></div>
+                ${notes ? `<div class="summary-row"><span class="text-faint">Notes</span><span class="text-sm">${notes}</span></div>` : ''}
+                <div class="summary-row"><span class="text-faint">Status</span><span class="badge badge-warning">Pending Coach Approval</span></div>
+                <div class="summary-row" style="border-top:2px solid var(--border);padding-top:var(--s-4);margin-top:var(--s-2);"><strong style="font-size:1rem;">Price</strong><span class="summary-total">${coach.hourlyRate} EGP</span></div>
+                <p class="text-xs text-faint" style="margin-top:var(--s-3);">💡 The coach will confirm the session. Payment is arranged directly with the coach.</p>`;
+        }
+
+        function confirmBooking() {
+            if (!Auth.isLoggedIn()) {
+                showToast('Please log in to book a session', 'error');
+                setTimeout(() => window.location.href = 'login.html', 1500);
+                return;
+            }
+
+            const user = Auth.getCurrentUser();
+            const focus = document.getElementById('trainingFocus').value;
+            const notes = document.getElementById('sessionNotes').value.trim();
+
+            CoachBookingsStore.add({
+                coachId: coach.id,
+                coachUserId: coach.userId,
+                playerId: user.id,
+                playerName: user.name,
+                date: document.getElementById('sessionDate').value,
+                timeSlot: selectedSlot,
+                sessionType: selectedSessionType,
+                focus: focus,
+                status: 'pending',
+                price: coach.hourlyRate,
+                notes: notes,
+                createdAt: new Date().toISOString().split('T')[0]
+            });
+
+            showToast('Training session requested! The coach will review it. 🧑‍🏫', 'success');
+            setTimeout(() => window.location.href = 'profile.html', 2000);
+        }
+    </script>
+</body>
+
+</html>

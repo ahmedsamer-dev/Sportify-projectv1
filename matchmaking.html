@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="SPORTIFY Smart Matchmaking — Find teammates, join matches, and play football with players near you.">
+    <title>Find Players — SPORTIFY</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .match-layout {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: var(--s-6);
+            align-items: start;
+        }
+
+        .match-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            padding: var(--s-6);
+            margin-bottom: var(--s-5);
+            transition: all var(--t-base);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .match-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            opacity: 0;
+            transition: opacity var(--t-base);
+        }
+
+        .match-card:hover {
+            border-color: var(--border-glow);
+            box-shadow: var(--shadow-hover);
+            transform: translateY(-2px);
+        }
+
+        .match-card:hover::before {
+            opacity: 1;
+        }
+
+        .match-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--s-3);
+        }
+
+        .match-card-header div:first-child div:first-child {
+            font-family: var(--font-display);
+        }
+
+        .players-bar {
+            display: flex;
+            margin-top: var(--s-3);
+            margin-bottom: var(--s-2);
+        }
+
+        .player-dot {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--r-full);
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            color: var(--bg-body);
+            font-weight: 700;
+            border: 2px solid var(--bg-card);
+            margin-left: -6px;
+            transition: transform var(--t-fast);
+        }
+
+        .player-dot:first-child {
+            margin-left: 0;
+        }
+
+        .player-dot:hover {
+            transform: scale(1.15);
+            z-index: 2;
+        }
+
+        .player-dot.empty {
+            background: var(--bg-elevated);
+            border: 2px dashed var(--border-strong);
+            color: var(--text-faint);
+        }
+
+        .progress-bar-wrap {
+            height: 5px;
+            background: var(--bg-elevated);
+            border-radius: var(--r-full);
+            overflow: hidden;
+            margin-top: var(--s-2);
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: var(--r-full);
+            transition: width 0.6s var(--ease);
+        }
+
+        .skill-beginner {
+            background: var(--primary-subtle-strong);
+            color: var(--primary);
+        }
+
+        .skill-intermediate {
+            background: var(--info-subtle);
+            color: var(--info);
+        }
+
+        .skill-advanced {
+            background: var(--warning-subtle);
+            color: var(--warning);
+        }
+
+        .filter-pills {
+            display: flex;
+            gap: var(--s-2);
+            flex-wrap: wrap;
+            margin-bottom: var(--s-6);
+        }
+
+        .filter-pill {
+            padding: 8px 18px;
+            border-radius: var(--r-full);
+            border: 1px solid var(--border-strong);
+            background: var(--bg-surface);
+            color: var(--text-faint);
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--t-fast);
+            font-family: var(--font-display);
+        }
+
+        .filter-pill:hover {
+            border-color: var(--primary-border);
+            color: var(--text-p);
+            transform: translateY(-1px);
+        }
+
+        .filter-pill.active {
+            background: var(--primary-subtle-strong);
+            border-color: var(--primary);
+            color: var(--primary);
+            box-shadow: var(--primary-glow);
+        }
+
+        .create-match-card {
+            position: sticky;
+            top: 80px;
+            border: 1px solid var(--primary-border);
+            background: linear-gradient(135deg, var(--bg-card), rgba(0, 230, 118, 0.02));
+        }
+
+        .create-match-card h3 {
+            font-family: var(--font-display);
+        }
+
+        @media (max-width: 960px) {
+            .match-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .create-match-card {
+                position: static;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <div id="navbar"></div>
+        <section class="main-content">
+            <div class="container">
+                <div class="section-header animate-in">
+                    <div class="section-badge">🤝 MATCHMAKING</div>
+                    <h1>Find Teammates</h1>
+                    <p>Smart matchmaking — find missing players for your match</p>
+                </div>
+
+                <div class="filter-pills animate-in" id="filterPills">
+                    <button class="filter-pill active" onclick="setFilter('all')">All Matches</button>
+                    <button class="filter-pill" onclick="setFilter('beginner')">🟢 Beginner</button>
+                    <button class="filter-pill" onclick="setFilter('intermediate')">🔵 Intermediate</button>
+                    <button class="filter-pill" onclick="setFilter('advanced')">🟠 Advanced</button>
+                </div>
+
+                <div class="match-layout">
+                    <div id="matchList"></div>
+                    <div id="matchSidebar"></div>
+                </div>
+            </div>
+        </section>
+        <div id="footer"></div>
+    </div>
+
+    <!-- Match Result Modal -->
+    <div class="modal-overlay" id="resultModal">
+        <div class="modal" style="max-width:400px; padding: var(--s-6);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--s-5);">
+                <h3 style="margin:0;">⚽ Submit Match Result</h3>
+                <button class="btn btn-ghost btn-sm" onclick="closeResultModal()" style="font-size:1.2rem;">✕</button>
+            </div>
+
+            <input type="hidden" id="matchIdToSubmit">
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Team A Score</label>
+                    <input type="number" class="form-input" id="score1" value="0" min="0" title="Score for Team A">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Team B Score</label>
+                    <input type="number" class="form-input" id="score2" value="0" min="0" title="Score for Team B">
+                </div>
+            </div>
+
+            <p class="text-xs text-faint mt-4">Other players must confirm the result before stats are updated.</p>
+
+            <button class="btn btn-primary btn-block mt-4" onclick="submitResult()">Submit for Confirmation</button>
+        </div>
+    </div>
+
+    <script src="js/sports-config.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/roles.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/subscription.js"></script>
+    <script src="js/race-guard.js"></script>
+    <script src="js/matchmaking.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        initPage('matchmaking');
+
+        const user = Auth.getCurrentUser();
+        const isLogged = Auth.isLoggedIn();
+        let currentFilter = 'all';
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+            event.target.classList.add('active');
+            renderMatches();
+        }
+
+        function renderMatches() {
+            const filters = {};
+            if (currentFilter !== 'all') filters.skillLevel = currentFilter;
+            const matches = MatchmakingManager.getOpenMatches(filters);
+
+            let html = '';
+            if (matches.length === 0) {
+                html = `<div class="card text-center" style="padding:var(--s-16);">
+                    <div style="font-size:3rem;margin-bottom:var(--s-4);">🤷</div>
+                    <h3>No open matches</h3>
+                    <p class="text-faint mt-1">Be the first to create a match request!</p>
+                </div>`;
+            }
+
+            matches.forEach((match, i) => {
+                const fillPercent = Math.round((match.playersJoined.length / match.maxPlayers) * 100);
+                const spotsLeft = match.maxPlayers - match.playersJoined.length;
+                const isMine = isLogged && match.playersJoined.some(p => p.userId === user.id);
+                const isCreator = isLogged && match.creatorId === user.id;
+                const skillClass = `skill-${match.skillLevel}`;
+
+                html += `
+                <div class="match-card animate-in" style="animation-delay:${i * 0.06}s;">
+                    <div class="match-card-header">
+                        <div>
+                            <div style="font-weight:700;color:var(--text-h);font-size:1rem;">📍 ${match.location}</div>
+                            <div class="text-sm text-faint">${formatDate(match.date)} · ${match.timeSlot}</div>
+                        </div>
+                        <div style="display:flex;gap:var(--s-2);align-items:center;">
+                            <span class="badge ${skillClass}">${match.skillLevel}</span>
+                            <span class="badge badge-neutral">${match.pitchType}</span>
+                        </div>
+                    </div>
+
+                    ${match.notes ? `<p class="text-sm" style="margin-bottom:var(--s-3);color:var(--text-p);">${match.notes}</p>` : ''}
+
+                    <div class="players-bar">
+                        ${match.playersJoined.map(p => `<div class="player-dot" title="${p.name}">${p.name.charAt(0)}</div>`).join('')}
+                        ${Array(spotsLeft).fill(0).map(() => '<div class="player-dot empty">?</div>').join('')}
+                    </div>
+
+                    <div class="progress-bar-wrap">
+                        <div class="progress-bar-fill" style="width:${fillPercent}%"></div>
+                    </div>
+
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--s-3);">
+                        <div class="text-sm text-faint">
+                            ${match.playersJoined.length}/${match.maxPlayers} players · Created by <strong style="color:var(--text-h);">${match.creatorName}</strong>
+                        </div>
+                        <div style="display:flex;gap:var(--s-2);">
+                             ${isCreator
+                        ? `<button class="btn btn-danger btn-sm" onclick="cancelMatch('${match.id}')">Cancel</button>
+                           ${match.status === 'full' && !match.result ? `<button class="btn btn-primary btn-sm" onclick="openResultModal('${match.id}')">Submit Result</button>` : ''}`
+                        : isMine
+                            ? `<button class="btn btn-secondary btn-sm" onclick="leaveMatch('${match.id}')">Leave</button>
+                               ${match.resultStatus === 'pending' && !match.result.confirmations.includes(user.id) ? `<button class="btn btn-accent btn-sm" onclick="confirmResult('${match.id}')">Confirm Result ✓</button>` : ''}`
+                            : isLogged
+                                ? `<button class="btn btn-accent btn-sm" onclick="joinMatch('${match.id}')">Join Match ⚡</button>`
+                                : `<a href="login.html" class="btn btn-primary btn-sm">Log in to join</a>`
+                    }
+                        </div>
+                    </div>
+                    ${match.resultStatus === 'pending' ? `<div class="text-xs mt-2" style="color:var(--warning);">⏳ Result pending confirmation (${match.result.confirmations.length} confirm)</div>` : ''}
+                    ${match.resultStatus === 'confirmed' ? `<div class="text-xs mt-2" style="color:var(--accent);">✅ Result confirmed! Stats updated. (${match.result.score1}-${match.result.score2})</div>` : ''}
+                </div>`;
+            });
+
+            document.getElementById('matchList').innerHTML = html;
+        }
+
+        function renderSidebar() {
+            const allMatches = MatchRequestsStore.getAll();
+            const openCount = allMatches.filter(m => m.status === 'open').length;
+            const fullCount = allMatches.filter(m => m.status === 'full').length;
+
+            let createForm = '';
+            if (isLogged) {
+                createForm = `
+                <div class="card create-match-card animate-in">
+                    <h3 style="margin-bottom:var(--s-5);">⚡ Create Match</h3>
+                    <div class="form-group">
+                        <label class="form-label">Location *</label>
+                        <input type="text" class="form-input" id="mLocation" placeholder="e.g., Nasr City, Cairo">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Date *</label>
+                            <input type="date" class="form-input" id="mDate">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Time *</label>
+                            <select class="form-select" id="mTime">
+                                <option value="16:00-17:00">16:00-17:00</option>
+                                <option value="17:00-18:00">17:00-18:00</option>
+                                <option value="18:00-19:00" selected>18:00-19:00</option>
+                                <option value="19:00-20:00">19:00-20:00</option>
+                                <option value="20:00-21:00">20:00-21:00</option>
+                                <option value="21:00-22:00">21:00-22:00</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Skill Level</label>
+                            <select class="form-select" id="mSkill">
+                                <option value="beginner">Beginner</option>
+                                <option value="intermediate" selected>Intermediate</option>
+                                <option value="advanced">Advanced</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Pitch Type</label>
+                            <select class="form-select" id="mPitchType">
+                                <option value="5-a-side">5-a-side</option>
+                                <option value="7-a-side">7-a-side</option>
+                                <option value="11-a-side">11-a-side</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Max Players</label>
+                        <input type="number" class="form-input" id="mMaxPlayers" value="10" min="4" max="22">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-textarea" id="mNotes" rows="2" placeholder="Any details..."></textarea>
+                    </div>
+                    <button class="btn btn-primary btn-block" onclick="createMatch()">Create Match 🚀</button>
+                </div>`;
+            } else {
+                createForm = `
+                <div class="card text-center animate-in" style="padding:var(--s-8);">
+                    <div style="font-size:2rem;margin-bottom:var(--s-3);">🤝</div>
+                    <p class="text-sm text-faint" style="margin-bottom:var(--s-3);">Log in to create a match or join one</p>
+                    <a href="login.html" class="btn btn-primary btn-sm btn-block">Log In</a>
+                </div>`;
+            }
+
+            document.getElementById('matchSidebar').innerHTML = `
+                <div class="card animate-in" style="margin-bottom:var(--s-4);">
+                    <h4 style="margin-bottom:var(--s-4);">📊 Matchmaking</h4>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--s-3);">
+                        <div class="stat-card" style="padding:var(--s-3);text-align:center;">
+                            <div class="stat-value" style="font-size:1.3rem;color:var(--accent);">${openCount}</div>
+                            <div class="stat-label">Open</div>
+                        </div>
+                        <div class="stat-card" style="padding:var(--s-3);text-align:center;">
+                            <div class="stat-value" style="font-size:1.3rem;">${fullCount}</div>
+                            <div class="stat-label">Full</div>
+                        </div>
+                    </div>
+                </div>
+                ${createForm}
+            `;
+        }
+
+        function joinMatch(id) {
+            const result = MatchmakingManager.joinMatch(id);
+            if (result.success) {
+                showToast(result.isFull ? 'Match is now full! ⚽' : 'You joined the match! 🤝', 'success');
+                renderMatches();
+                renderSidebar();
+            } else {
+                showToast(result.message, 'error');
+            }
+        }
+
+        function leaveMatch(id) {
+            const result = MatchmakingManager.leaveMatch(id);
+            if (result.success) {
+                showToast('You left the match', 'info');
+                renderMatches();
+            } else {
+                showToast(result.message, 'error');
+            }
+        }
+
+        function cancelMatch(id) {
+            if (!confirm('Cancel this match? All players will be removed.')) return;
+            const result = MatchmakingManager.cancelMatch(id);
+            if (result.success) {
+                showToast('Match cancelled', 'info');
+                renderMatches();
+                renderSidebar();
+            } else {
+                showToast(result.message, 'error');
+            }
+        }
+
+        function createMatch() {
+            const location = document.getElementById('mLocation').value.trim();
+            const date = document.getElementById('mDate').value;
+            const timeSlot = document.getElementById('mTime').value;
+            const skillLevel = document.getElementById('mSkill').value;
+            const pitchType = document.getElementById('mPitchType').value;
+            const maxPlayers = parseInt(document.getElementById('mMaxPlayers').value) || 10;
+            const notes = document.getElementById('mNotes').value.trim();
+
+            if (!location) { showToast('Please enter a location', 'error'); return; }
+            if (!date) { showToast('Please select a date', 'error'); return; }
+
+            const result = MatchmakingManager.createRequest({ location, date, timeSlot, skillLevel, pitchType, maxPlayers, notes });
+            if (result.success) {
+                showToast('Match created! Waiting for players... 🤝', 'success');
+                renderMatches();
+                renderSidebar();
+            } else {
+                showToast(result.message || 'Failed to create match', 'error');
+            }
+        }
+
+        function openResultModal(id) {
+            document.getElementById('matchIdToSubmit').value = id;
+            document.getElementById('resultModal').classList.add('active');
+        }
+
+        function closeResultModal() {
+            document.getElementById('resultModal').classList.remove('active');
+        }
+
+        function submitResult() {
+            const id = document.getElementById('matchIdToSubmit').value;
+            const s1 = parseInt(document.getElementById('score1').value);
+            const s2 = parseInt(document.getElementById('score2').value);
+
+            const res = MatchmakingManager.submitResult(id, s1, s2);
+            if (res.success) {
+                showToast('Result submitted for confirmation!', 'success');
+                closeResultModal();
+                renderMatches();
+            } else {
+                showToast(res.message, 'error');
+            }
+        }
+
+        function confirmResult(id) {
+            const res = MatchmakingManager.confirmResult(id);
+            if (res.success) {
+                showToast(res.confirmed ? 'Result confirmed! Stats updated. ⚽' : 'Confirmation recorded!', 'success');
+                renderMatches();
+            } else {
+                showToast(res.message, 'error');
+            }
+        }
+
+        renderMatches();
+        renderSidebar();
+
+        // Close modal on click outside
+        document.getElementById('resultModal').addEventListener('click', function (e) {
+            if (e.target === this) closeResultModal();
+        });
+    </script>
+</body>
+
+</html>
