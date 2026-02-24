@@ -663,14 +663,26 @@
     initPage('profile');
     if (!Auth.requireAuth()) throw 'Not authenticated';
 
-    const user = Auth.getCurrentUser();
+    const params = new URLSearchParams(window.location.search);
+    const targetUserId = params.get('id');
+    const me = Auth.getCurrentUser();
+    const user = targetUserId ? UsersStore.getById(targetUserId) : me;
+
+    if (!user) {
+      document.getElementById('profileContent').innerHTML = `<div class="card text-center p-16"><h3>User not found</h3><a href="leaderboard.html" class="btn btn-primary mt-4">Back to Leaderboard</a></div>`;
+      throw 'User not found';
+    }
+
     const { profile: sportProfile } = SportProfileManager.getProfile(user.id, 'football');
+    const isMe = me && user.id === me.id;
     const myPitchIds = PitchesStore.filter(p => p.ownerId === user.id).map(p => p.id);
     const bookings = BookingsStore.filter(b => b.playerId === user.id || (user.role === 'pitch_owner' && myPitchIds.includes(b.pitchId)));
     const roleBadge = { player: 'badge-primary', pitch_owner: 'badge-warning', coach: 'badge-info', admin: 'badge-danger' };
     const roleLabel = { player: '⚽ Player', pitch_owner: '🏟️ Pitch Owner', coach: '🧑‍🏫 Coach', admin: '⚙️ Admin' };
 
     // ---- Compute derived data ----
+    const myEnrollments = AcademyEnrollmentsStore.filter(en => en.playerId === user.id && (en.status === 'active' || en.status === 'approved'));
+    const allEnrollments = AcademyEnrollmentsStore.filter(en => en.playerId === user.id);
     const pos = SportProfileManager.getPositionConfig(sportProfile?.position || 'CM');
     const skillLvl = SportProfileManager.getSkillLevel(sportProfile?.rating || 3.0);
     const reliability = SportProfileManager.computeReliability(sportProfile || {});
@@ -725,9 +737,13 @@
       </button>
     </div>`;
 
-    // ======= QUICK ACTIONS (Upgrade 1) =======
+    // ======= QUICK ACTIONS (Enhanced Role Filter) =======
+    const isPlayer = Auth.hasRole('player');
+    const hasAcademyAccess = isPlayer && myEnrollments.length > 0;
+
     html += `
     <div class="quick-actions animate-in animate-delay-1">
+      ${isPlayer ? `
       <a href="matchmaking.html" class="quick-action primary-action" id="qa-join-match">
         <div class="quick-action-icon">🤝</div>
         <div class="quick-action-label">Join Match</div>
@@ -739,19 +755,69 @@
       <a href="coaches.html" class="quick-action" id="qa-training">
         <div class="quick-action-icon">🏋️</div>
         <div class="quick-action-label">Get Training</div>
-      </a>
+      </a>` : ''}
       <a href="tournaments.html" class="quick-action" id="qa-tournament">
         <div class="quick-action-icon">🏆</div>
         <div class="quick-action-label">Tournament</div>
       </a>
+      ${user.role === 'coach' ? `
+      <a href="academy-create.html" class="quick-action" id="qa-academy">
+        <div class="quick-action-icon">🎓</div>
+        <div class="quick-action-label">Launch Academy</div>
+      </a>` : ''}
     </div>`;
 
     // ======= FOOTBALL DASHBOARD =======
     html += `<div class="fb-dashboard animate-in animate-delay-2">`;
 
-    // --- Panel 1: Dynamic Rating (Upgrade 2) ---
+    // --- Panel 1: My Academy Enrollments ---
+    if (allEnrollments.length > 0) {
+      html += `
+        <div class="fb-panel full-width">
+          <h3>🎓 My Academy Enrollments</h3>
+          <div class="grid grid-2 gap-4">
+            ${allEnrollments.map(en => {
+        const academy = AcademiesStore.getById(en.academyId);
+        const coachUser = academy ? UsersStore.getById(academy.coachUserId) : null;
+        const state = getEnrollmentState(en.academyId, user.id);
+
+        let statusBadge = '';
+        let actionBtn = '';
+
+        switch (state) {
+          case EnrollmentStates.PENDING:
+            statusBadge = '<span class="badge badge-warning">Waiting for Coach to accept</span>';
+            break;
+          case EnrollmentStates.APPROVED:
+            statusBadge = '<span class="badge badge-accent">Approved</span>';
+            actionBtn = `<a href="feed.html?chatType=direct&chatId=${academy ? academy.coachUserId : ''}" class="btn btn-primary btn-xs">Chat with Coach</a>`;
+            break;
+          case EnrollmentStates.REJECTED:
+            statusBadge = '<span class="badge badge-error">Rejected</span>';
+            break;
+          case EnrollmentStates.EXPIRED:
+            statusBadge = '<span class="badge badge-neutral">Expired</span>';
+            actionBtn = `<a href="academies.html" class="btn btn-outline btn-xs">Renew</a>`;
+            break;
+        }
+
+        return `
+                <div class="card bg-elevated border-soft flex-between">
+                  <div>
+                    <div class="font-bold">${academy ? academy.name : 'Academy'}</div>
+                    <div class="text-xs text-faint">Coach: ${coachUser ? coachUser.name : 'Unknown'}</div>
+                    <div class="mt-1">${statusBadge}</div>
+                  </div>
+                  ${actionBtn}
+                </div>`;
+      }).join('')}
+          </div>
+        </div>`;
+    }
+
+    // --- Panel 2: Dynamic Rating (Upgrade 2) ---
     html += `
-      <div class="fb-panel">
+      <div class="fb-panel full-width">
         <h3>⭐ Player Rating</h3>
         <div class="rating-display">
           <div class="rating-circle">
@@ -766,16 +832,16 @@
           </div>
           <div class="rating-meta">
             <div class="rating-label-big" style="color:${skillLvl.color};">${skillLvl.icon} ${skillLvl.label}</div>
-            <div style="font-size:0.8rem;color:var(--text-faint);">Based on ${sportProfile?.ratingHistory?.length || 0} events</div>
+            <div class="text-sm c-faint">Based on ${sportProfile?.ratingHistory?.length || 0} events</div>
             <div class="rating-bar-container">
               <div class="rating-bar"><div class="rating-bar-fill" style="width:${ratingPct}%"></div></div>
-              <span style="font-size:0.75rem;color:var(--text-faint);font-weight:600;">${Math.round(ratingPct)}%</span>
+              <span class="text-xs c-faint font-bold">${Math.round(ratingPct)}%</span>
             </div>
           </div>
         </div>
       </div>`;
 
-    // --- Panel 2: Position & Skill ---
+    // --- Panel 5: Position & Skill ---
     html += `
       <div class="fb-panel">
         <h3>🎯 Position & Skill</h3>
@@ -785,35 +851,11 @@
             <small>${pos.id}</small>
           </div>
           <div class="position-meta">
-            <div style="font-family:var(--font-display);font-weight:800;font-size:1.1rem;">${pos.label}</div>
-            <div style="font-size:0.82rem;color:var(--text-faint);margin-top:2px;">Primary Position</div>
-            <div style="margin-top:var(--s-3);">
+            <div class="font-black text-lg">${pos.label}</div>
+            <div class="text-sm c-faint mt-1">Primary Position</div>
+            <div class="mt-3">
               <span class="badge" style="background:${skillLvl.color}20;color:${skillLvl.color};border:1px solid ${skillLvl.color}40;">${skillLvl.icon} ${skillLvl.label}</span>
             </div>
-          </div>
-        </div>
-      </div>`;
-
-    // --- Panel 3 (Full Width): Football Stats ---
-    html += `
-      <div class="fb-panel full-width">
-        <h3>📊 Football Stats</h3>
-        <div class="stats-row">
-          <div class="stat-mini">
-            <div class="stat-mini-value" style="color:var(--primary);">${sportProfile?.goals || 0}</div>
-            <div class="stat-mini-label">Goals</div>
-          </div>
-          <div class="stat-mini">
-            <div class="stat-mini-value" style="color:var(--accent);">${sportProfile?.assists || 0}</div>
-            <div class="stat-mini-label">Assists</div>
-          </div>
-          <div class="stat-mini">
-            <div class="stat-mini-value" style="color:var(--info);">${sportProfile?.matchesPlayed || 0}</div>
-            <div class="stat-mini-label">Matches</div>
-          </div>
-          <div class="stat-mini">
-            <div class="stat-mini-value" style="color:var(--warning);">${sportProfile?.currentStreak || 0}</div>
-            <div class="stat-mini-label">Streak 🔥</div>
           </div>
         </div>
       </div>`;
@@ -828,7 +870,7 @@
             <small>${reliabilityGrade.label}</small>
           </div>
           <div class="reliability-details">
-            <div style="font-size:0.85rem;color:var(--text-faint);">Reliability: <strong style="color:${reliabilityGrade.color};font-family:var(--font-display);">${reliability}%</strong></div>
+            <div class="text-sm c-faint">Reliability: <strong style="color:${reliabilityGrade.color};font-family:var(--font-display);">${reliability}%</strong></div>
             <div class="reliability-bar-bg">
               <div class="reliability-bar-fill" style="width:${reliability}%;background:${reliabilityGrade.color};"></div>
             </div>
@@ -859,7 +901,7 @@
 
     // ======= LEADERBOARD PREVIEW (Upgrade 4) =======
     html += `
-    <div class="fb-dashboard animate-in animate-delay-3">
+      <div class="fb-dashboard animate-in animate-delay-3">
       <div class="fb-panel">
         <h3>🏆 Top Rated Players</h3>
         ${topRated.length === 0
@@ -867,7 +909,7 @@
         : topRated.map(p => {
           const rankClass = p.rank === 1 ? 'gold' : p.rank === 2 ? 'silver' : p.rank === 3 ? 'bronze' : '';
           const isMe = p.userId === user.id;
-          return `<div class="lb-row ${isMe ? 'is-me' : ''}">
+          return `<div class="lb-row ${isMe ? 'is-me' : ''}" onclick="window.location.href='profile.html?id=${p.userId}'" style="cursor:pointer;">
                 <div class="lb-rank ${rankClass}">${p.rank <= 3 ? ['🥇', '🥈', '🥉'][p.rank - 1] : p.rank}</div>
                 <div class="lb-player">
                   <div class="lb-player-name">${p.userName}${isMe ? ' (You)' : ''}</div>
@@ -886,7 +928,7 @@
         : topGoals.map(p => {
           const rankClass = p.rank === 1 ? 'gold' : p.rank === 2 ? 'silver' : p.rank === 3 ? 'bronze' : '';
           const isMe = p.userId === user.id;
-          return `<div class="lb-row ${isMe ? 'is-me' : ''}">
+          return `<div class="lb-row ${isMe ? 'is-me' : ''}" onclick="window.location.href='profile.html?id=${p.userId}'" style="cursor:pointer;">
                 <div class="lb-rank ${rankClass}">${p.rank <= 3 ? ['🥇', '🥈', '🥉'][p.rank - 1] : p.rank}</div>
                 <div class="lb-player">
                   <div class="lb-player-name">${p.userName}${isMe ? ' (You)' : ''}</div>
@@ -897,12 +939,12 @@
         }).join('')}
         <a href="leaderboard.html" class="btn btn-ghost btn-sm" style="width:100%;margin-top:var(--s-4);text-align:center;">View Full Leaderboard →</a>
       </div>
-    </div>`;
+    </div> `;
 
     // ======= BOOKINGS TABLE (existing, preserved) =======
     html += `
-    <div class="section-card animate-in animate-delay-3">
-      <h3>📋 ${user.role === 'pitch_owner' ? 'Pitch Bookings' : 'My Bookings'}</h3>
+      <div class="section-card animate-in animate-delay-3">
+        <h3>📋 ${user.role === 'pitch_owner' ? 'Pitch Bookings' : 'My Bookings'}</h3>
       ${bookings.length === 0
         ? '<p class="text-faint text-center" style="padding:var(--s-10);">No bookings yet. <a href="pitches.html">Book your first pitch →</a></p>'
         : `<div class="table-wrapper"><table>
@@ -919,8 +961,9 @@
               <td>${b.totalPrice} EGP</td>
               <td><span class="status-dot ${sc}"></span>${b.status}</td>
             </tr>`;
-        }).join('')}</tbody></table></div>`}
-    </div>`;
+        }).join('')}</tbody></table></div>`
+      }
+    </div> `;
 
     // ======= COACH SECTION (preserved) =======
     if (user.role === 'coach') {

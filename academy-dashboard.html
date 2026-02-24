@@ -4,405 +4,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description"
-        content="Manage your academy on SPORTIFY. View enrolled players, track attendance, and add notes.">
     <title>Academy Dashboard — SPORTIFY</title>
     <link rel="stylesheet" href="css/style.css">
-    <style>
-        /* Dashboard-specific */
-        .dash-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            flex-wrap: wrap;
-            gap: var(--s-4);
-            margin-bottom: var(--s-6);
-        }
-
-        .dash-header h1 {
-            font-size: 1.5rem;
-        }
-
-        .academy-selector {
-            display: flex;
-            gap: var(--s-2);
-            margin-bottom: var(--s-6);
-            overflow-x: auto;
-            padding-bottom: var(--s-2);
-        }
-
-        .academy-tab {
-            padding: var(--s-3) var(--s-5);
-            border-radius: var(--r-full);
-            border: 1px solid var(--border-strong);
-            background: var(--bg-surface);
-            color: var(--text-faint);
-            font-weight: 600;
-            font-size: 0.82rem;
-            cursor: pointer;
-            transition: all var(--t-fast);
-            white-space: nowrap;
-        }
-
-        .academy-tab:hover {
-            border-color: var(--primary-border);
-            color: var(--text-p);
-        }
-
-        .academy-tab.active {
-            border-color: var(--primary);
-            background: var(--primary-subtle);
-            color: var(--primary);
-        }
-
-        .dash-tabs {
-            display: flex;
-            gap: var(--s-1);
-            border-bottom: 1px solid var(--border);
-            margin-bottom: var(--s-6);
-        }
-
-        .dash-tab {
-            padding: var(--s-3) var(--s-5);
-            border: none;
-            background: none;
-            color: var(--text-faint);
-            font-weight: 600;
-            font-size: 0.85rem;
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            transition: all var(--t-fast);
-        }
-
-        .dash-tab:hover {
-            color: var(--text-p);
-        }
-
-        .dash-tab.active {
-            color: var(--primary);
-            border-bottom-color: var(--primary);
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        /* Player cards */
-        .player-card {
-            display: flex;
-            gap: var(--s-4);
-            align-items: flex-start;
-            padding: var(--s-5);
-        }
-
-        .player-avatar {
-            width: 44px;
-            height: 44px;
-            border-radius: var(--r-full);
-            background: var(--primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 0.9rem;
-            color: white;
-            flex-shrink: 0;
-        }
-
-        .player-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .player-name {
-            font-weight: 700;
-            color: var(--text-h);
-            font-size: 0.95rem;
-        }
-
-        .player-meta {
-            font-size: 0.8rem;
-            color: var(--text-faint);
-            margin-top: 2px;
-        }
-
-        .player-actions {
-            display: flex;
-            gap: var(--s-2);
-            flex-shrink: 0;
-        }
-
-        /* Attendance grid */
-        .attendance-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
-            gap: 4px;
-        }
-
-        .att-dot {
-            width: 36px;
-            height: 36px;
-            border-radius: var(--r-sm);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.7rem;
-            font-weight: 600;
-            cursor: default;
-        }
-
-        .att-dot.present {
-            background: var(--accent-subtle);
-            color: var(--accent);
-        }
-
-        .att-dot.absent {
-            background: var(--danger-subtle);
-            color: var(--danger);
-        }
-
-        .att-dot.none {
-            background: var(--bg-elevated);
-            color: var(--text-faint);
-        }
-
-        /* Notes */
-        .note-card {
-            padding: var(--s-4);
-            background: var(--bg-elevated);
-            border-radius: var(--r-md);
-            margin-bottom: var(--s-3);
-        }
-
-        .note-card .note-player {
-            font-weight: 600;
-            color: var(--text-h);
-            font-size: 0.85rem;
-            margin-bottom: 4px;
-        }
-
-        .note-card .note-text {
-            font-size: 0.82rem;
-            color: var(--text-p);
-            font-style: italic;
-        }
-
-        /* Quick actions */
-        .quick-action-bar {
-            display: flex;
-            gap: var(--s-3);
-            padding: var(--s-4);
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--r-lg);
-            margin-bottom: var(--s-6);
-            flex-wrap: wrap;
-        }
-
-        .empty-dash {
-            text-align: center;
-            padding: var(--s-16) var(--s-6);
-        }
-
-        .empty-dash .empty-icon {
-            font-size: 3rem;
-            margin-bottom: var(--s-4);
-            opacity: 0.5;
-        }
-
-        /* Attendance input row */
-        .attendance-row {
-            display: flex;
-            align-items: center;
-            gap: var(--s-3);
-            padding: var(--s-3) 0;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .attendance-row:last-child {
-            border-bottom: none;
-        }
-
-        .att-toggle {
-            display: flex;
-            gap: var(--s-2);
-        }
-
-        .att-btn {
-            width: 34px;
-            height: 34px;
-            border-radius: var(--r-sm);
-            border: 1px solid var(--border-strong);
-            background: var(--bg-surface);
-            cursor: pointer;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all var(--t-fast);
-        }
-
-        .att-btn:hover {
-            border-color: var(--primary-border);
-        }
-
-        .att-btn.selected-present {
-            background: var(--accent-subtle);
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-
-        .att-btn.selected-absent {
-            background: var(--danger-subtle);
-            border-color: var(--danger);
-            color: var(--danger);
-        }
-
-        /* Reviews in dashboard */
-        .review-card-dash {
-            padding: var(--s-4);
-            background: var(--bg-elevated);
-            border-radius: var(--r-md);
-            margin-bottom: var(--s-3);
-        }
-
-        .review-card-dash .review-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: var(--s-2);
-        }
-
-        .review-card-dash .review-author {
-            font-weight: 600;
-            color: var(--text-h);
-            font-size: 0.85rem;
-        }
-
-        .review-card-dash .review-date {
-            font-size: 0.75rem;
-            color: var(--text-faint);
-        }
-
-        .review-card-dash .review-text {
-            font-size: 0.85rem;
-            color: var(--text-p);
-            line-height: 1.6;
-            font-style: italic;
-        }
-
-        .review-card-dash .review-stars {
-            font-size: 0.85rem;
-            margin-bottom: var(--s-2);
-        }
-
-        .rating-overview {
-            display: flex;
-            align-items: center;
-            gap: var(--s-4);
-            padding: var(--s-5);
-            background: var(--bg-elevated);
-            border-radius: var(--r-md);
-            margin-bottom: var(--s-5);
-        }
-
-        .rating-overview .rating-big {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: var(--text-h);
-            line-height: 1;
-        }
-
-        /* Level badges */
-        .level-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 3px 10px;
-            border-radius: var(--r-full);
-            font-size: 0.72rem;
-            font-weight: 700;
-            border: 1px solid;
-        }
-
-        .level-progress {
-            height: 6px;
-            border-radius: var(--r-full);
-            background: var(--bg-elevated);
-            overflow: hidden;
-            margin-top: 6px;
-        }
-
-        .level-progress-fill {
-            height: 100%;
-            border-radius: var(--r-full);
-            transition: width 0.6s var(--ease);
-        }
-
-        .points-badge {
-            font-size: 0.72rem;
-            font-weight: 700;
-            color: var(--text-h);
-        }
-
-        .points-history-item {
-            display: flex;
-            align-items: center;
-            gap: var(--s-3);
-            padding: var(--s-2) 0;
-            border-bottom: 1px solid var(--border);
-            font-size: 0.82rem;
-        }
-
-        .points-history-item:last-child {
-            border-bottom: none;
-        }
-
-        .pts-icon {
-            width: 28px;
-            height: 28px;
-            border-radius: var(--r-sm);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.8rem;
-            flex-shrink: 0;
-        }
-    </style>
 </head>
 
 <body>
     <div class="page-wrapper">
         <div id="navbar"></div>
         <section class="main-content">
-            <div class="container" id="dashContent"></div>
+            <div class="container">
+                <div class="section-header-premium animate-in">
+                    <div class="header-badge-premium">🎓 STUDENT PORTAL</div>
+                    <h1 class="header-title-premium" id="academyTitle">Academy Dashboard</h1>
+                    <p id="academyDesc">Loading academy details...</p>
+                    <div class="header-divider-premium"></div>
+                </div>
+
+                <div class="grid grid-3 gap-6">
+                    <!-- Membership Status -->
+                    <div class="card flex-col animate-in animate-delay-1" style="grid-column: span 2;">
+                        <div class="membership-card">
+                            <h3 style="color:var(--primary);">Active Membership</h3>
+                            <div class="flex-between mt-4">
+                                <span class="text-faint">Subscription End</span>
+                                <span class="text-strong" id="subEnd">--</span>
+                            </div>
+                            <div class="flex-between mt-1">
+                                <span class="text-faint">Remaining Time</span>
+                                <span class="text-accent" id="daysLeft">-- days</span>
+                            </div>
+                            <div class="progress-bar-premium">
+                                <div class="progress-fill-premium" id="subProgress" style="width: 0%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-2 gap-4 mt-6">
+                            <div class="card bg-elevated border-soft">
+                                <div class="text-xs text-faint uppercase font-bold">Start Date</div>
+                                <div class="text-lg mt-1" id="startDate">--</div>
+                            </div>
+                            <div class="card bg-elevated border-soft">
+                                <div class="text-xs text-faint uppercase font-bold">Category</div>
+                                <div class="text-lg mt-1" id="academyCategory">--</div>
+                            </div>
+                        </div>
+
+                        <div class="card mt-6 bg-elevated border-soft">
+                            <h4 class="mb-3">Training Schedule</h4>
+                            <div id="academySchedule" class="text-sm">--</div>
+                        </div>
+                    </div>
+
+                    <!-- Sidebar Actions -->
+                    <div class="flex-col gap-4 animate-in animate-delay-2">
+                        <div class="card text-center">
+                            <div class="coach-card-avatar mx-auto mb-3" id="coachAvatar"
+                                style="width: 60px; height: 60px;">C</div>
+                            <h4 id="coachName">Head Coach</h4>
+                            <p class="text-xs text-faint mb-4">Certified Instructor</p>
+                            <button class="btn btn-primary btn-block" onclick="toggleChat()">Message Coach</button>
+                        </div>
+
+                        <div class="card">
+                            <h4 class="mb-3">Quick Actions</h4>
+                            <div class="flex-col gap-2">
+                                <button class="btn btn-outline btn-sm btn-block">Download Syllabus</button>
+                                <button class="btn btn-outline btn-sm btn-block">Request Attendance Fix</button>
+                                <button class="btn btn-error btn-sm btn-block">Unenroll</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
+
+        <!-- Messenger Widget -->
+        <div class="msg-chat-widget">
+            <div id="chatPanel" class="msg-panel">
+                <div class="msg-header">
+                    <div class="coach-card-avatar" style="width: 32px; height: 32px; font-size: 0.8rem;"
+                        id="chatAvatar">C</div>
+                    <div>
+                        <div class="text-sm font-bold" id="chatName">Coach Name</div>
+                        <div class="text-xs text-primary">online</div>
+                    </div>
+                    <button class="btn btn-icon ml-auto" onclick="toggleChat()"
+                        style="background:transparent; border:none; color:inherit;">✕</button>
+                </div>
+                <div class="msg-history" id="chatHistory">
+                    <div class="chat-bubble bubble-received">Hello! Ready for today's session?</div>
+                </div>
+                <form class="msg-input-area" onsubmit="sendMessage(event)">
+                    <input type="text" class="form-input text-sm" id="msgInput" placeholder="Write a message..."
+                        style="flex:1;">
+                    <button type="submit" class="btn btn-primary" style="padding: 0 16px;">➤</button>
+                </form>
+            </div>
+            <button class="btn btn-primary" id="chatFab" onclick="toggleChat()"
+                style="width: 56px; height: 56px; border-radius: 50%; box-shadow: var(--shadow-xl);">💬</button>
+        </div>
+
         <div id="footer"></div>
-    </div>
-
-    <!-- Add Note Modal -->
-    <div class="modal-overlay" id="noteModal">
-        <div class="modal">
-            <div id="noteModalContent"></div>
-        </div>
-    </div>
-
-    <!-- Mark Attendance Modal -->
-    <div class="modal-overlay" id="attendanceModal">
-        <div class="modal" style="max-width:520px;">
-            <div id="attendanceModalContent"></div>
-        </div>
-    </div>
-
-    <!-- Award Points Modal -->
-    <div class="modal-overlay" id="awardModal">
-        <div class="modal" style="max-width:480px;">
-            <div id="awardModalContent"></div>
-        </div>
     </div>
 
     <script src="js/data.js"></script>
@@ -410,510 +112,123 @@
     <script src="js/auth.js"></script>
     <script src="js/app.js"></script>
     <script>
-        initPage('academies');
+        initPage('academy-dashboard');
 
-        // ---- Access Control ----
-        if (!Auth.isLoggedIn()) { window.location.href = 'login.html'; }
+        const params = new URLSearchParams(window.location.search);
+        const academyId = params.get('academy');
         const user = Auth.getCurrentUser();
 
-        if (!user || user.role !== 'coach') {
-            document.getElementById('dashContent').innerHTML = `
-                <div class="card text-center" style="padding:var(--s-16);">
-                    <h3>🔒 Coach Access Only</h3>
-                    <p class="text-faint mt-1">This dashboard is for coaches managing their academies.</p>
-                    <a href="academies.html" class="btn btn-primary mt-3">Browse Academies</a>
-                </div>`;
-        } else {
-            init();
+        if (!user) {
+            window.location.href = 'index.html';
         }
 
-        function init() {
-            const myAcademies = AcademiesStore.filter(a => a.coachUserId === user.id);
+        const isPlayer = Auth.hasRole('player');
+        const isCoach = Auth.hasRole('coach');
+        const isOwner = Auth.hasRole('pitch_owner');
 
-            if (myAcademies.length === 0) {
-                document.getElementById('dashContent').innerHTML = `
-                    <div class="empty-dash">
-                        <div class="empty-icon">🎓</div>
-                        <h2>No Academies Yet</h2>
-                        <p class="text-faint mt-1" style="max-width:400px;margin:var(--s-3) auto var(--s-6);">Create your first academy and start accepting player enrollments.</p>
-                        <a href="academy-create.html" class="btn btn-primary btn-lg">+ Create Academy</a>
-                    </div>`;
-                return;
-            }
-
-            // Build dashboard
-            let selectedAcademyId = myAcademies[0].id;
-
-            function renderDashboard() {
-                const academy = AcademiesStore.getById(selectedAcademyId);
-                if (!academy) return;
-                const enrollments = EnrollmentsStore.filter(e => e.academyId === selectedAcademyId);
-                const activeEnrollments = enrollments.filter(e => e.status === 'active');
-                const spotsLeft = academy.maxCapacity - activeEnrollments.length;
-                const totalAttendance = enrollments.reduce((sum, e) => sum + (e.attendance ? e.attendance.length : 0), 0);
-                const totalPresent = enrollments.reduce((sum, e) => sum + (e.attendance ? e.attendance.filter(a => a.present).length : 0), 0);
-                const attendanceRate = totalAttendance > 0 ? Math.round((totalPresent / totalAttendance) * 100) : 0;
-                const monthlyRevenue = activeEnrollments.length * academy.monthlyPrice;
-
-                document.getElementById('dashContent').innerHTML = `
-                    <div class="dash-header">
-                        <div>
-                            <h1>🎓 Academy Dashboard</h1>
-                            <p class="text-faint">Manage your academies, players, and attendance</p>
-                        </div>
-                        <div style="display:flex;gap:var(--s-2);">
-                            <a href="academy-create.html" class="btn btn-primary btn-sm">+ New Academy</a>
-                            <a href="academies.html" class="btn btn-outline btn-sm">View Public</a>
-                        </div>
-                    </div>
-
-                    ${myAcademies.length > 1 ? `
-                    <div class="academy-selector">
-                        ${myAcademies.map(a => `
-                            <button class="academy-tab ${a.id === selectedAcademyId ? 'active' : ''}"
-                                onclick="switchAcademy('${a.id}')">${a.name}</button>
-                        `).join('')}
-                    </div>` : ''}
-
-                    <!-- Stats -->
-                    <div class="grid grid-4 mb-3">
-                        <div class="stat-card animate-in">
-                            <div class="stat-value">${activeEnrollments.length}<span class="text-sm text-faint" style="font-weight:400;">/${academy.maxCapacity}</span></div>
-                            <div class="stat-label">Enrolled Players</div>
-                        </div>
-                        <div class="stat-card animate-in animate-delay-1">
-                            <div class="stat-value" style="color:${spotsLeft > 0 ? 'var(--accent)' : 'var(--danger)'};">${spotsLeft}</div>
-                            <div class="stat-label">Spots Remaining</div>
-                        </div>
-                        <div class="stat-card animate-in animate-delay-2">
-                            <div class="stat-value">${attendanceRate}%</div>
-                            <div class="stat-label">Attendance Rate</div>
-                        </div>
-                        <div class="stat-card animate-in animate-delay-3">
-                            <div class="stat-value" style="color:var(--accent);">${monthlyRevenue.toLocaleString()}</div>
-                            <div class="stat-label">Monthly Revenue (EGP)</div>
-                        </div>
-                    </div>
-
-                    <!-- Quick Actions -->
-                    <div class="quick-action-bar animate-in">
-                        <button class="btn btn-accent btn-sm" onclick="openAttendanceModal()">📋 Mark Attendance</button>
-                        <button class="btn btn-primary btn-sm" onclick="openAwardModal()">🏆 Award Points</button>
-                        <button class="btn btn-secondary btn-sm" onclick="toggleAcademyStatus()">
-                            ${academy.status === 'active' ? '⏸️ Pause Academy' : '▶️ Activate Academy'}
-                        </button>
-                        <span class="badge ${academy.status === 'active' ? 'badge-accent' : 'badge-warning'}" style="margin-left:auto;padding:8px 14px;">
-                            ${academy.status === 'active' ? '🟢 Active' : '⏸️ Paused'}
-                        </span>
-                    </div>
-
-                    <!-- Content Tabs -->
-                    <div class="dash-tabs">
-                        <button class="dash-tab active" onclick="switchTab('players')">👥 Players (${activeEnrollments.length})</button>
-                        <button class="dash-tab" onclick="switchTab('attendance')">📊 Attendance</button>
-                        <button class="dash-tab" onclick="switchTab('levels')">🏆 Levels</button>
-                        <button class="dash-tab" onclick="switchTab('notes')">📝 Notes</button>
-                        <button class="dash-tab" onclick="switchTab('reviews')">⭐ Reviews</button>
-                        <button class="dash-tab" onclick="switchTab('settings')">⚙️ Settings</button>
-                    </div>
-
-                    <!-- Players Tab -->
-                    <div class="tab-content active" id="tab-players">
-                        ${activeEnrollments.length === 0
-                        ? '<div class="card text-center" style="padding:var(--s-10);"><p class="text-faint">No players enrolled yet. Share your academy link to get started!</p></div>'
-                        : `<div class="card" style="padding:0;overflow:hidden;">
-                            ${activeEnrollments.map(enrollment => {
-                            const player = getUserById(enrollment.playerId);
-                            const att = enrollment.attendance || [];
-                            const presentCount = att.filter(a => a.present).length;
-                            const rate = att.length > 0 ? Math.round((presentCount / att.length) * 100) : 0;
-                            const plvl = getPlayerAcademyLevel(selectedAcademyId, enrollment.playerId);
-                            return `
-                                <div class="player-card" style="border-bottom:1px solid var(--border);">
-                                    <div class="player-avatar">${player ? player.name.charAt(0) : '?'}</div>
-                                    <div class="player-info">
-                                        <div class="player-name">${enrollment.playerName}
-                                            <span class="level-badge" style="border-color:${plvl.level.color};color:${plvl.level.color};background:${plvl.level.color}15;margin-left:6px;">${plvl.level.icon} ${plvl.level.name}</span>
-                                            <span class="points-badge" style="margin-left:4px;">${plvl.points} pts</span>
-                                        </div>
-                                        <div class="player-meta">
-                                            Enrolled ${formatDate(enrollment.enrolledAt)} · Expires ${formatDate(enrollment.subscriptionEnd)}
-                                        </div>
-                                        <div style="display:flex;gap:var(--s-2);margin-top:var(--s-2);flex-wrap:wrap;">
-                                            <span class="badge badge-accent">${rate}% attendance</span>
-                                            <span class="badge badge-neutral">${presentCount}/${att.length} sessions</span>
-                                            ${enrollment.notes ? '<span class="badge badge-info">Has notes</span>' : ''}
-                                        </div>
-                                    </div>
-                                    <div class="player-actions">
-                                        <button class="btn btn-ghost btn-sm" onclick="openNoteModal('${enrollment.id}', '${enrollment.playerName}')" title="Add note">📝</button>
-                                    </div>
-                                </div>`;
-                        }).join('')}
-                        </div>`}
-                    </div>
-
-                    <!-- Attendance Tab -->
-                    <div class="tab-content" id="tab-attendance">
-                        <div class="card">
-                            <h3 style="margin-bottom:var(--s-5);">Attendance Overview</h3>
-                            ${activeEnrollments.length === 0
-                        ? '<p class="text-faint text-center" style="padding:var(--s-6);">No players to show attendance for.</p>'
-                        : `<div class="table-wrapper">
-                                <table>
-                                    <thead><tr><th>Player</th><th>Sessions</th><th>Present</th><th>Absent</th><th>Rate</th><th>History</th></tr></thead>
-                                    <tbody>${activeEnrollments.map(e => {
-                            const att = e.attendance || [];
-                            const present = att.filter(a => a.present).length;
-                            const absent = att.filter(a => !a.present).length;
-                            const rate = att.length > 0 ? Math.round((present / att.length) * 100) : 0;
-                            return `<tr>
-                                            <td><strong style="color:var(--text-h);">${e.playerName}</strong></td>
-                                            <td>${att.length}</td>
-                                            <td style="color:var(--accent);">${present}</td>
-                                            <td style="color:var(--danger);">${absent}</td>
-                                            <td><span class="badge ${rate >= 70 ? 'badge-accent' : rate >= 40 ? 'badge-warning' : 'badge-danger'}">${rate}%</span></td>
-                                            <td>
-                                                <div class="attendance-grid" style="max-width:200px;">
-                                                    ${att.map(a => `<div class="att-dot ${a.present ? 'present' : 'absent'}" title="${a.date}">${a.present ? '✓' : '✕'}</div>`).join('')}
-                                                </div>
-                                            </td>
-                                        </tr>`;
-                        }).join('')}</tbody>
-                                </table>
-                            </div>`}
-                        </div>
-                    </div>
-
-                    <!-- Levels Tab -->
-                    <div class="tab-content" id="tab-levels">
-                        <div class="card">
-                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--s-5);">
-                                <h3>🏆 Player Levels & Points</h3>
-                                <button class="btn btn-primary btn-sm" onclick="openAwardModal()">🏆 Award Points</button>
-                            </div>
-                            <div style="padding:var(--s-3);background:var(--bg-elevated);border-radius:var(--r-md);margin-bottom:var(--s-5);font-size:0.8rem;color:var(--text-faint);">
-                                <strong style="color:var(--text-h);">Points System:</strong>
-                                📋 Attendance = ${ACADEMY_POINTS.ATTENDANCE}pts &nbsp;·&nbsp;
-                                🏆 Competition Win = ${ACADEMY_POINTS.COMPETITION_WIN}pts &nbsp;·&nbsp;
-                                ✅ Program Complete = ${ACADEMY_POINTS.PROGRAM_COMPLETE}pts
-                            </div>
-                            ${activeEnrollments.length === 0
-                        ? '<p class="text-faint text-center" style="padding:var(--s-6);">No players to show levels for.</p>'
-                        : activeEnrollments
-                            .map(e => ({ enrollment: e, lvl: getPlayerAcademyLevel(selectedAcademyId, e.playerId) }))
-                            .sort((a, b) => b.lvl.points - a.lvl.points)
-                            .map((item, idx) => {
-                                const e = item.enrollment;
-                                const pl = item.lvl;
-                                const history = pl.record ? (pl.record.history || []).slice(-5).reverse() : [];
-                                const typeIcons = { ATTENDANCE: '📋', COMPETITION_WIN: '🏆', PROGRAM_COMPLETE: '✅' };
-                                const typeBg = { ATTENDANCE: 'var(--accent-subtle)', COMPETITION_WIN: 'var(--primary-subtle)', PROGRAM_COMPLETE: 'var(--bg-elevated)' };
-                                return `
-                                    <div style="padding:var(--s-4);border-bottom:1px solid var(--border);">
-                                        <div style="display:flex;align-items:center;gap:var(--s-3);margin-bottom:var(--s-2);">
-                                            <span style="font-size:1.1rem;font-weight:800;color:var(--text-faint);width:24px;text-align:center;">#${idx + 1}</span>
-                                            <div style="flex:1;">
-                                                <div style="display:flex;align-items:center;gap:var(--s-2);flex-wrap:wrap;">
-                                                    <strong style="color:var(--text-h);">${e.playerName}</strong>
-                                                    <span class="level-badge" style="border-color:${pl.level.color};color:${pl.level.color};background:${pl.level.color}15;">${pl.level.icon} ${pl.level.name}</span>
-                                                    <span class="points-badge">${pl.points} pts</span>
-                                                </div>
-                                                <div class="level-progress" style="max-width:280px;">
-                                                    <div class="level-progress-fill" style="width:${pl.progress}%;background:${pl.level.color};"></div>
-                                                </div>
-                                                <div class="text-xs text-faint" style="margin-top:2px;">
-                                                    ${pl.nextLevel ? pl.points + '/' + pl.nextLevel.min + ' pts to ' + pl.nextLevel.icon + ' ' + pl.nextLevel.name : '👑 Max level reached!'}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        ${history.length > 0 ? `
-                                        <div style="margin-left:36px;margin-top:var(--s-2);">
-                                            ${history.map(h => `
-                                                <div class="points-history-item">
-                                                    <div class="pts-icon" style="background:${typeBg[h.type] || 'var(--bg-elevated)'};">${typeIcons[h.type] || '⭐'}</div>
-                                                    <div style="flex:1;color:var(--text-p);">${h.note}</div>
-                                                    <div style="color:var(--accent);font-weight:700;font-size:0.8rem;">+${h.points}</div>
-                                                    <div class="text-xs text-faint">${h.date}</div>
-                                                </div>
-                                            `).join('')}
-                                        </div>` : ''}
-                                    </div>`;
-                            }).join('')}
-                        </div>
-                    </div>
-
-                    <!-- Notes Tab -->
-                    <div class="tab-content" id="tab-notes">
-                        <div class="card">
-                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--s-5);">
-                                <h3>Player Notes</h3>
-                            </div>
-                            ${enrollments.filter(e => e.notes && e.notes.trim()).length === 0
-                        ? '<p class="text-faint text-center" style="padding:var(--s-6);">No notes yet. Click 📝 on a player to add notes.</p>'
-                        : enrollments.filter(e => e.notes && e.notes.trim()).map(e => `
-                                <div class="note-card">
-                                    <div class="note-player">${e.playerName}</div>
-                                    <div class="note-text">"${e.notes}"</div>
-                                    <div style="margin-top:var(--s-2);display:flex;gap:var(--s-2);">
-                                        <button class="btn btn-ghost btn-sm" style="font-size:0.75rem;" onclick="openNoteModal('${e.id}', '${e.playerName}')">Edit</button>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-
-                    <!-- Settings Tab -->
-                    <div class="tab-content" id="tab-settings">
-                        <div class="card">
-                            <h3 style="margin-bottom:var(--s-5);">Academy Settings</h3>
-                            <div class="grid grid-2">
-                                <div><span class="form-label">Name</span><p style="color:var(--text-h);margin-top:4px;">${academy.name}</p></div>
-                                <div><span class="form-label">Category</span><p style="color:var(--text-h);margin-top:4px;">${academy.category}</p></div>
-                                <div><span class="form-label">Location</span><p style="color:var(--text-h);margin-top:4px;">${academy.location}</p></div>
-                                <div><span class="form-label">Schedule</span><p style="color:var(--text-h);margin-top:4px;">${academy.schedule}</p></div>
-                                <div><span class="form-label">Level</span><p style="color:var(--text-h);margin-top:4px;">${academy.level}</p></div>
-                                <div><span class="form-label">Age Group</span><p style="color:var(--text-h);margin-top:4px;">${academy.ageGroup}</p></div>
-                                <div><span class="form-label">Max Capacity</span><p style="color:var(--text-h);margin-top:4px;">${academy.maxCapacity}</p></div>
-                                <div><span class="form-label">Monthly Price</span><p class="price" style="margin-top:4px;">${academy.monthlyPrice} EGP</p></div>
-                            </div>
-                            <div style="margin-top:var(--s-5);"><span class="form-label">Description</span><p class="text-faint" style="margin-top:4px;line-height:1.7;">${academy.description}</p></div>
-                            <div style="margin-top:var(--s-6);padding-top:var(--s-4);border-top:1px solid var(--border);display:flex;gap:var(--s-3);">
-                                <span class="text-xs text-faint" style="margin-right:auto;">Created ${formatDate(academy.createdAt)}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Reviews Tab -->
-                    <div class="tab-content" id="tab-reviews">
-                        <div class="card">
-                            <h3 style="margin-bottom:var(--s-5);">Player Reviews</h3>
-                            ${(() => {
-                        const rd = getAcademyRating(selectedAcademyId);
-                        if (rd.count === 0) return '<p class="text-faint text-center" style="padding:var(--s-6);">No reviews yet. Enrolled players can rate your academy.</p>';
-                        let out = `
-                                    <div class="rating-overview">
-                                        <div class="rating-big">${rd.avg}</div>
-                                        <div>
-                                            <div style="font-size:1rem;margin-bottom:4px;">${getStarRating(rd.avg)}</div>
-                                            <div class="text-sm text-faint">${rd.count} review${rd.count !== 1 ? 's' : ''} from enrolled players</div>
-                                        </div>
-                                    </div>`;
-                        rd.ratings.forEach(r => {
-                            out += `
-                                        <div class="review-card-dash">
-                                            <div class="review-header">
-                                                <span class="review-author">${r.playerName}</span>
-                                                <span class="review-date">${formatDate(r.createdAt)}</span>
-                                            </div>
-                                            <div class="review-stars">${getStarRating(r.rating)}</div>
-                                            <div class="review-text">&ldquo;${r.review}&rdquo;</div>
-                                        </div>`;
-                        });
-                        return out;
-                    })()}
-                        </div>
-                    </div>
-                `;
-            }
-
-            renderDashboard();
-
-            // Make functions globally accessible
-            window.switchAcademy = function (id) {
-                selectedAcademyId = id;
-                renderDashboard();
-            };
-
-            window.switchTab = function (tabName) {
-                document.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-                const tabs = document.querySelectorAll('.dash-tab');
-                const tabIds = ['players', 'attendance', 'levels', 'notes', 'reviews', 'settings'];
-                const idx = tabIds.indexOf(tabName);
-                if (idx >= 0 && tabs[idx]) tabs[idx].classList.add('active');
-                const el = document.getElementById('tab-' + tabName);
-                if (el) el.classList.add('active');
-            };
-
-            window.toggleAcademyStatus = function () {
-                const academy = AcademiesStore.getById(selectedAcademyId);
-                const newStatus = academy.status === 'active' ? 'paused' : 'active';
-                AcademiesStore.update(selectedAcademyId, { status: newStatus });
-                showToast(`Academy ${newStatus === 'active' ? 'activated' : 'paused'}`, 'success');
-                renderDashboard();
-            };
-
-            // ---- Note Modal ----
-            window.openNoteModal = function (enrollmentId, playerName) {
-                const enrollment = EnrollmentsStore.getById(enrollmentId);
-                document.getElementById('noteModalContent').innerHTML = `
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--s-5);">
-                        <h3>📝 Note for ${playerName}</h3>
-                        <button class="btn btn-ghost btn-sm" onclick="closeNoteModal()" style="font-size:1.2rem;">✕</button>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Coach Notes</label>
-                        <textarea class="form-textarea" id="noteInput" placeholder="Add performance notes, feedback, areas to improve...">${enrollment ? enrollment.notes || '' : ''}</textarea>
-                    </div>
-                    <div style="display:flex;gap:var(--s-3);">
-                        <button class="btn btn-secondary" onclick="closeNoteModal()" style="flex:1;">Cancel</button>
-                        <button class="btn btn-primary" onclick="saveNote('${enrollmentId}')" style="flex:2;">Save Note</button>
-                    </div>
-                `;
-                document.getElementById('noteModal').classList.add('active');
-            };
-
-            window.closeNoteModal = function () {
-                document.getElementById('noteModal').classList.remove('active');
-            };
-
-            window.saveNote = function (enrollmentId) {
-                const note = document.getElementById('noteInput').value.trim();
-                EnrollmentsStore.update(enrollmentId, { notes: note });
-                closeNoteModal();
-                showToast('Note saved!', 'success');
-                renderDashboard();
-            };
-
-            // ---- Attendance Modal ----
-            window.openAttendanceModal = function () {
-                const enrollments = EnrollmentsStore.filter(e => e.academyId === selectedAcademyId && e.status === 'active');
-                const today = new Date().toISOString().split('T')[0];
-
-                if (enrollments.length === 0) {
-                    showToast('No players enrolled to mark attendance for', 'info');
-                    return;
-                }
-
-                document.getElementById('attendanceModalContent').innerHTML = `
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--s-5);">
-                        <div>
-                            <h3>📋 Mark Attendance</h3>
-                            <p class="text-sm text-faint">${formatDate(today)}</p>
-                        </div>
-                        <button class="btn btn-ghost btn-sm" onclick="closeAttendanceModal()" style="font-size:1.2rem;">✕</button>
-                    </div>
-                    <div id="attendanceList">
-                        ${enrollments.map(e => `
-                            <div class="attendance-row">
-                                <div class="player-avatar" style="width:34px;height:34px;font-size:0.8rem;">${e.playerName.charAt(0)}</div>
-                                <div style="flex:1;font-weight:600;font-size:0.85rem;color:var(--text-h);">${e.playerName}</div>
-                                <div class="att-toggle">
-                                    <button class="att-btn" id="att-p-${e.id}" onclick="toggleAtt('${e.id}', true)">✓</button>
-                                    <button class="att-btn" id="att-a-${e.id}" onclick="toggleAtt('${e.id}', false)">✕</button>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                    <button class="btn btn-accent btn-block mt-4" onclick="submitAttendance()">Save Attendance</button>
-                `;
-                window._attendanceData = {};
-                document.getElementById('attendanceModal').classList.add('active');
-            };
-
-            window._attendanceData = {};
-
-            window.toggleAtt = function (enrollmentId, present) {
-                window._attendanceData[enrollmentId] = present;
-                const pBtn = document.getElementById('att-p-' + enrollmentId);
-                const aBtn = document.getElementById('att-a-' + enrollmentId);
-                pBtn.className = 'att-btn' + (present ? ' selected-present' : '');
-                aBtn.className = 'att-btn' + (!present ? ' selected-absent' : '');
-            };
-
-            window.closeAttendanceModal = function () {
-                document.getElementById('attendanceModal').classList.remove('active');
-            };
-
-            window.submitAttendance = function () {
-                const today = new Date().toISOString().split('T')[0];
-                const entries = Object.entries(window._attendanceData);
-
-                if (entries.length === 0) {
-                    showToast('Please mark at least one player', 'error');
-                    return;
-                }
-
-                let pointsAwarded = 0;
-                entries.forEach(([enrollmentId, present]) => {
-                    const enrollment = EnrollmentsStore.getById(enrollmentId);
-                    if (enrollment) {
-                        const attendance = enrollment.attendance || [];
-                        // Only award points if this is a NEW present entry (not editing existing)
-                        const hadToday = attendance.find(a => a.date === today);
-                        const filtered = attendance.filter(a => a.date !== today);
-                        filtered.push({ date: today, present });
-                        EnrollmentsStore.update(enrollmentId, { attendance: filtered });
-                        // Auto-award attendance points for present players (only if new entry)
-                        if (present && !hadToday) {
-                            awardAcademyPoints(selectedAcademyId, enrollment.playerId, enrollment.playerName, 'ATTENDANCE');
-                            pointsAwarded++;
-                        }
-                    }
-                });
-
-                closeAttendanceModal();
-                const ptsMsg = pointsAwarded > 0 ? ` (+${ACADEMY_POINTS.ATTENDANCE}pts each for ${pointsAwarded} present)` : '';
-                showToast(`Attendance saved for ${entries.length} player(s)!${ptsMsg}`, 'success');
-                renderDashboard();
-            };
-            // ---- Award Points Modal ----
-            window.openAwardModal = function () {
-                const enrollments = EnrollmentsStore.filter(e => e.academyId === selectedAcademyId && e.status === 'active');
-                if (enrollments.length === 0) { showToast('No players enrolled', 'info'); return; }
-
-                document.getElementById('awardModalContent').innerHTML = `
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--s-5);">
-                        <h3>🏆 Award Points</h3>
-                        <button class="btn btn-ghost btn-sm" onclick="closeAwardModal()" style="font-size:1.2rem;">✕</button>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Select Player</label>
-                        <select class="form-select" id="awardPlayer" title="Select player">
-                            ${enrollments.map(e => `<option value="${e.playerId}" data-name="${e.playerName}">${e.playerName}</option>`).join('')}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Point Type</label>
-                        <select class="form-select" id="awardType" title="Select point type">
-                            <option value="COMPETITION_WIN">🏆 Competition Win (+${ACADEMY_POINTS.COMPETITION_WIN} pts)</option>
-                            <option value="PROGRAM_COMPLETE">✅ Program Complete (+${ACADEMY_POINTS.PROGRAM_COMPLETE} pts)</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Note (optional)</label>
-                        <input class="form-input" id="awardNote" placeholder="e.g. Won finishing drill competition">
-                    </div>
-                    <button class="btn btn-primary btn-block" onclick="submitAward()">Award Points</button>
-                `;
-                document.getElementById('awardModal').classList.add('active');
-            };
-
-            window.closeAwardModal = function () {
-                document.getElementById('awardModal').classList.remove('active');
-            };
-
-            window.submitAward = function () {
-                const select = document.getElementById('awardPlayer');
-                const playerId = select.value;
-                const playerName = select.options[select.selectedIndex].dataset.name;
-                const type = document.getElementById('awardType').value;
-                const note = document.getElementById('awardNote').value.trim();
-
-                const pts = awardAcademyPoints(selectedAcademyId, playerId, playerName, type, note || undefined);
-                if (pts) {
-                    closeAwardModal();
-                    showToast(`+${pts} points awarded to ${playerName}! 🏆`, 'success');
-                    renderDashboard();
-                }
-            };
+        if (!isPlayer && !isCoach && !isOwner) {
+            window.location.href = 'index.html';
         }
 
-        // Click outside to close modals
-        document.getElementById('noteModal').addEventListener('click', function (e) { if (e.target === this) window.closeNoteModal?.(); });
-        document.getElementById('attendanceModal').addEventListener('click', function (e) { if (e.target === this) window.closeAttendanceModal?.(); });
-        document.getElementById('awardModal').addEventListener('click', function (e) { if (e.target === this) window.closeAwardModal?.(); });
+        // Security Check: Is enrolled? (Players only)
+        if (isPlayer && !isCoach && !isOwner) {
+            const state = getEnrollmentState(academyId, user.id);
+            if (state !== EnrollmentStates.ACTIVE && state !== EnrollmentStates.EXPIRED) {
+                alert('Access Denied: You must be enrolled to view this dashboard.');
+                window.location.href = 'academies.html';
+            }
+        }
+
+        function loadDashboard() {
+            const academy = AcademiesStore.getById(academyId);
+            const enrollment = AcademyEnrollmentsStore.filter(en => en.academyId === academyId && en.playerId === user.id)[0];
+            const coachUser = academy ? getUserById(academy.coachUserId) : null;
+
+            if (!academy) return;
+            // Enrollment is optional for coach/owner view
+
+            document.getElementById('academyTitle').innerText = academy.name;
+            document.getElementById('academyDesc').innerText = academy.description;
+            document.getElementById('academyCategory').innerText = academy.category;
+            document.getElementById('academySchedule').innerText = academy.schedule;
+            document.getElementById('coachName').innerText = coachUser ? coachUser.name : 'Unknown Coach';
+            document.getElementById('chatName').innerText = coachUser ? coachUser.name : 'Unknown Coach';
+            document.getElementById('coachAvatar').innerText = (coachUser ? coachUser.name : 'C').charAt(0);
+            document.getElementById('chatAvatar').innerText = (coachUser ? coachUser.name : 'C').charAt(0);
+
+            document.getElementById('startDate').innerText = enrollment ? enrollment.enrolledAt : 'N/A';
+            document.getElementById('subEnd').innerText = enrollment ? enrollment.subscriptionEnd : 'N/A';
+
+            // Progress Logic
+            if (enrollment) {
+                const start = new Date(enrollment.enrolledAt).getTime();
+                const end = new Date(enrollment.subscriptionEnd).getTime();
+                const now = Date.now();
+                const total = end - start;
+                const elapsed = now - start;
+                const percent = Math.max(0, Math.min(100, (elapsed / total) * 100));
+                const daysLeft = Math.max(0, Math.ceil((end - now) / (1000 * 60 * 60 * 24)));
+
+                document.getElementById('subProgress').style.width = percent + '%';
+                document.getElementById('daysLeft').innerText = daysLeft + ' days';
+
+                if (daysLeft < 5) {
+                    document.getElementById('daysLeft').style.color = 'var(--error)';
+                }
+            } else {
+                document.getElementById('subProgress').style.width = '0%';
+                document.getElementById('daysLeft').innerText = 'Admin View';
+            }
+
+            // Load Messages
+            loadMessages();
+        }
+
+        function toggleChat() {
+            const panel = document.getElementById('chatPanel');
+            panel.classList.toggle('active');
+            if (panel.classList.contains('active')) {
+                const history = document.getElementById('chatHistory');
+                history.scrollTop = history.scrollHeight;
+            }
+        }
+
+        function loadMessages() {
+            if (!user || !academyId) return;
+            const msgs = AcademyMessagesStore.filter(m =>
+                (m.fromId === user.id && m.toId === academyId) ||
+                (m.fromId === academyId && m.toId === user.id)
+            );
+            const history = document.getElementById('chatHistory');
+            history.innerHTML = msgs.length > 0
+                ? msgs.map(m => `
+                    <div class="chat-bubble ${m.fromId === user.id ? 'bubble-sent' : 'bubble-received'}">${m.text}</div>
+                `).join('')
+                : '<div class="chat-bubble bubble-received">Hello! Ready for today\'s session?</div>';
+            history.scrollTop = history.scrollHeight;
+        }
+
+        function sendMessage(e) {
+            if (e) e.preventDefault();
+            const input = document.getElementById('msgInput');
+            const text = input.value.trim();
+            if (!text || !user || !academyId) return;
+
+            AcademyMessagesStore.add({
+                fromId: user.id,
+                toId: academyId,
+                text: text,
+                timestamp: new Date().toISOString()
+            });
+
+            input.value = '';
+            loadMessages();
+        }
+
+        // Staggered refresh
+        setInterval(loadMessages, 5000);
+
+        loadDashboard();
     </script>
 </body>
 

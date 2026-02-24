@@ -10,94 +10,77 @@ const ROLES = {
         label: 'Player',
         icon: '⚽',
         badge: 'badge-primary',
-        description: 'Browse & book pitches, join tournaments',
+        description: 'Browse venues, join matches, and enroll in elite academies.',
         dashboardUrl: 'profile.html'
     },
     pitch_owner: {
         label: 'Pitch Owner',
         icon: '🏟️',
         badge: 'badge-warning',
-        description: 'List your pitches & manage bookings',
+        description: 'Manage your sports facilities and host prestigious tournaments.',
         dashboardUrl: 'pitch-owner-dashboard.html'
     },
     coach: {
-        label: 'Coach',
+        label: 'Coach / Academy Owner',
         icon: '🧑‍🏫',
         badge: 'badge-info',
-        description: 'Offer coaching & get hired for sessions',
+        description: 'Build your academy, mentor athletes, and manage enrollments.',
         dashboardUrl: 'coach-dashboard.html'
     },
     admin: {
         label: 'Admin',
         icon: '⚙️',
         badge: 'badge-danger',
-        description: 'Manage users, content & platform settings',
+        description: 'Global system administration and data integrity.',
         dashboardUrl: 'admin.html'
     }
 };
 
-// ---- Permission Matrix ----
-// Each role has a set of allowed actions.
+// ---- Permission Matrix (Strict Enforcement) ----
 const PERMISSIONS = {
     player: [
-        'book_pitch',
-        'book_coach',
-        'join_tournament',
-        'join_match',
-        'create_match_request',
-        'upload_video',
         'view_pitches',
-        'view_academies',
+        'book_pitch',            // Send booking request
+        'view_match',
+        'join_match',
+        'create_match',
+        'use_find_teammates',
+        'join_tournament',
+        'view_coaches',
         'enroll_academy',
-        'rate_academy',
-        'view_profile',
+        'access_academy_chat',   // Only if enrolled
         'view_feed',
-        'create_feed_post',
-        'like_feed',
-        'comment_feed'
+        'create_feed_post'
     ],
     pitch_owner: [
-        'create_pitch',
+        'add_pitch',
         'manage_pitches',
-        'control_availability',
-        'accept_reject_bookings',
-        'view_pitch_bookings',
+        'manage_availability',
+        'accept_reject_booking',
         'create_tournament',
-        'manage_subscription',
-        'view_profile',
+        'view_linked_academies',
         'view_feed',
-        'create_feed_post',
-        'like_feed',
-        'comment_feed'
+        'create_feed_post'
     ],
     coach: [
-        'create_coach_profile',
-        'offer_training_sessions',
-        'view_session_requests',
-        'accept_reject_sessions',
-        'manage_subscription',
-        'view_profile',
+        'create_academy',
+        'manage_academy',
+        'accept_enrollment',
+        'manage_sessions',
+        'chat_with_students',
         'view_feed',
-        'create_feed_post',
-        'like_feed',
-        'comment_feed'
+        'create_feed_post'
     ],
     admin: [
         'manage_users',
         'manage_content',
         'manage_platform',
-        'view_profile',
         'view_all_data',
-        'view_feed',
-        'create_feed_post',
-        'like_feed',
-        'comment_feed',
         'reset_data'
     ]
 };
 
-// ---- Academy Extension (Coach + Academy) ----
-// These permissions are granted ONLY when a coach has created at least one academy.
+// ---- Academy Extension Permissions (Dynamic) ----
 const ACADEMY_PERMISSIONS = [
     'create_academy',
     'manage_academy',

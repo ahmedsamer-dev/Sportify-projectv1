@@ -94,9 +94,10 @@
             font-size: 0.875rem;
             color: var(--text-p);
             margin-bottom: var(--s-4);
-            line-height: 1.6;
+            overflow: hidden;
             display: -webkit-box;
             -webkit-line-clamp: 3;
+            line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
@@ -403,9 +404,11 @@
 
         // Stats
         const allAcademies = AcademiesStore.getAll();
-        const allEnrollments = EnrollmentsStore.getAll();
-        const activeAcademies = allAcademies.filter(a => a.status === 'active');
+        const allEnrollments = AcademyEnrollmentsStore.getAll();
+        const activeAcademies = allAcademies.filter(a => ['active', 'approved'].includes(a.status));
         const uniqueCoaches = [...new Set(allAcademies.map(a => a.coachUserId))];
+
+        console.log("Academies data:", allAcademies);
 
         document.getElementById('academyStats').innerHTML = `
             <div class="stat-card animate-in"><div class="stat-value">${activeAcademies.length}</div><div class="stat-label">Active Academies</div></div>
@@ -448,7 +451,7 @@
 
             document.getElementById('academyGrid').innerHTML = filtered.map(academy => {
                 const coachUser = getUserById(academy.coachUserId);
-                const enrolled = EnrollmentsStore.filter(e => e.academyId === academy.id && e.status === 'active');
+                const enrolled = AcademyEnrollmentsStore.filter(e => e.academyId === academy.id && e.status === 'active');
                 const spotsLeft = academy.maxCapacity - enrolled.length;
                 const fillPercent = Math.round((enrolled.length / academy.maxCapacity) * 100);
                 const isFull = spotsLeft <= 0;
@@ -485,10 +488,23 @@
                     </div>
                     <div class="card-footer">
                         <span class="price">${academy.monthlyPrice} EGP<span class="text-xs text-faint" style="font-weight:400;"> /month</span></span>
-                        ${isEnrolled
-                        ? '<span class="badge badge-accent" style="padding:8px 16px;font-size:0.82rem;">✓ Enrolled</span>'
-                        : `<button class="btn btn-primary btn-sm" onclick="openAcademyDetail('${academy.id}')" ${isFull && !isEnrolled ? 'disabled' : ''}>${isFull ? 'Full' : 'View & Enroll'}</button>`
-                    }
+                        ${(() => {
+                        if (!user) return `<button class="btn btn-primary btn-sm" onclick="openAcademyDetail('${academy.id}')">View Detail</button>`;
+
+                        const state = getEnrollmentState(academy.id, user.id);
+                        switch (state) {
+                            case EnrollmentStates.PENDING:
+                                return '<span class="badge badge-warning" style="padding:8px 16px;">⏳ Pending Approval</span>';
+                            case EnrollmentStates.APPROVED:
+                                return '<span class="badge badge-accent" style="padding:8px 16px;">✓ Enrolled</span>';
+                            case EnrollmentStates.REJECTED:
+                                return '<span class="badge badge-error" style="padding:8px 16px;">✕ Rejected</span>';
+                            case EnrollmentStates.EXPIRED:
+                                return '<button class="btn btn-error btn-sm" onclick="openAcademyDetail(\'' + academy.id + '\')">Renew</button>';
+                            default:
+                                return `<button class="btn btn-primary btn-sm" onclick="openAcademyDetail('${academy.id}')" ${isFull ? 'disabled' : ''}>${isFull ? 'Full' : 'View & Enroll'}</button>`;
+                        }
+                    })()}
                     </div>
                 </div>`;
             }).join('');
@@ -512,7 +528,7 @@
             if (!academy) return;
             const coachUser = getUserById(academy.coachUserId);
             const coach = CoachesStore.getById(academy.coachId);
-            const enrolled = EnrollmentsStore.filter(e => e.academyId === id && e.status === 'active');
+            const enrolled = AcademyEnrollmentsStore.filter(e => e.academyId === id && e.status === 'active');
             const spotsLeft = academy.maxCapacity - enrolled.length;
             const isFull = spotsLeft <= 0;
             const isEnrolled = user && enrolled.find(e => e.playerId === user.id);
@@ -549,39 +565,64 @@
                         <span class="price" style="font-size:1.3rem;">${academy.monthlyPrice} EGP</span>
                         <span class="text-sm text-faint"> / month</span>
                     </div>
-                    ${isEnrolled
-                    ? '<span class="badge badge-accent" style="padding:10px 20px;font-size:0.85rem;">✓ Already Enrolled</span>'
-                    : !user
-                        ? '<a href="login.html" class="btn btn-primary">Log in to Enroll</a>'
-                        : !isPlayer
-                            ? '<span class="text-sm text-faint">Only players can enroll</span>'
-                            : isFull
-                                ? '<button class="btn btn-secondary" disabled>Academy Full</button>'
-                                : `<button class="btn btn-primary btn-lg" onclick="enrollInAcademy('${id}')">Enroll Now</button>`
-                }
+                    ${(() => {
+                    if (!user) return '<a href="login.html" class="btn btn-primary">Log in to Enroll</a>';
+                    if (!isPlayer) return '<span class="text-sm text-faint">Only players can enroll</span>';
+
+                    const state = getEnrollmentState(id, user.id);
+                    switch (state) {
+                        case EnrollmentStates.PENDING:
+                            return `
+                                    <div style="text-align:right;">
+                                        <div class="badge badge-warning mb-1" style="padding:10px 20px;font-size:0.85rem;">⏳ Waiting for Coach to accept</div>
+                                        <div class="text-xs text-faint">Your request is being reviewed</div>
+                                    </div>`;
+                        case EnrollmentStates.APPROVED:
+                            return `
+                                    <div class="flex-row gap-2" style="align-items:center;">
+                                        <span class="badge badge-accent" style="padding:10px 20px;font-size:0.85rem;">✓ You Enrolled</span>
+                                        <a href="feed.html?chatType=direct&chatId=${academy.coachUserId}" class="btn btn-primary btn-sm">Chat with Coach</a>
+                                    </div>`;
+                        case EnrollmentStates.REJECTED:
+                            return `
+                                    <div class="flex-col gap-2" style="align-items:flex-end;">
+                                        <span class="badge badge-error" style="padding:10px 20px;font-size:0.85rem;">✕ Request Rejected</span>
+                                        <button class="btn btn-outline btn-sm" onclick="enrollInAcademy('${id}')">Try Again</button>
+                                    </div>`;
+                        case EnrollmentStates.EXPIRED:
+                            return `<button class="btn btn-error" onclick="enrollInAcademy('${id}')">Renew Enrollment</button>`;
+                        default:
+                            if (isFull) return '<button class="btn btn-secondary" disabled>Academy Full</button>';
+                            return `<button class="btn btn-primary btn-lg" onclick="enrollInAcademy('${id}')">Enroll Now</button>`;
+                    }
+                })()}
                 </div>
 
-                <!-- Player Level (only for enrolled players) -->
-                ${isEnrolled && user ? (() => {
-                    const pl = getPlayerAcademyLevel(id, user.id);
-                    return `
-                    <div class="player-level-card">
-                        <div class="player-level-header">
-                            <span class="level-icon-lg">${pl.level.icon}</span>
-                            <div style="flex:1;">
-                                <div class="level-name-lg" style="color:${pl.level.color};">${pl.level.name}</div>
-                                <div class="text-xs text-faint">Academy Level</div>
+                <!-- Player Level (only for approved players) -->
+                ${(() => {
+                    const state = getEnrollmentState(id, user?.id);
+                    if (state === EnrollmentStates.APPROVED) {
+                        const pl = getPlayerAcademyLevel(id, user.id);
+                        return `
+                        <div class="player-level-card">
+                            <div class="player-level-header">
+                                <span class="level-icon-lg">${pl.level.icon}</span>
+                                <div style="flex:1;">
+                                    <div class="level-name-lg" style="color:${pl.level.color};">${pl.level.name}</div>
+                                    <div class="text-xs text-faint">Academy Level</div>
+                                </div>
+                                <div style="text-align:right;">
+                                    <div class="level-pts-lg">${pl.points} pts</div>
+                                    <div class="text-xs text-faint">${pl.nextLevel ? (pl.nextLevel.min - pl.points) + ' pts to ' + pl.nextLevel.icon + ' ' + pl.nextLevel.name : '👑 Max level!'}</div>
+                                </div>
                             </div>
-                            <div style="text-align:right;">
-                                <div class="level-pts-lg">${pl.points} pts</div>
-                                <div class="text-xs text-faint">${pl.nextLevel ? (pl.nextLevel.min - pl.points) + ' pts to ' + pl.nextLevel.icon + ' ' + pl.nextLevel.name : '👑 Max level!'}</div>
+                            <div class="level-progress-bar">
+                                <div class="level-progress-fill" style="width:${pl.progress}%;background:${pl.level.color};"></div>
                             </div>
-                        </div>
-                        <div class="level-progress-bar">
-                            <div class="level-progress-fill" style="width:${pl.progress}%;background:${pl.level.color};"></div>
-                        </div>
-                    </div>`;
-                })() : ''}
+                        </div>`;
+                    }
+                    return '';
+                })()}
 
                 <!-- Reviews Section -->
                 ${buildReviewsSection(id, isEnrolled)}
@@ -596,56 +637,61 @@
             if (e.target === this) closeModal();
         });
 
-        // ---- Enrollment ----
+        // ---- Enrollment (New Request Workflow) ----
         function enrollInAcademy(academyId) {
             if (!Auth.isLoggedIn()) { showToast('Please log in first', 'error'); return; }
-            if (!isPlayer) { showToast('Only players can enroll', 'error'); return; }
+            if (!Auth.requireRole('player')) { return; }
 
             const academy = AcademiesStore.getById(academyId);
             if (!academy) { showToast('Academy not found', 'error'); return; }
 
-            const enrolled = EnrollmentsStore.filter(e => e.academyId === academyId && e.status === 'active');
-            if (enrolled.length >= academy.maxCapacity) { showToast('Sorry, this academy is full!', 'error'); return; }
+            const allEnrollments = AcademyEnrollmentsStore.getAll();
+            const myRequest = allEnrollments.find(e => e.academyId === academyId && e.playerId === user.id);
+            if (myRequest && myRequest.status === 'pending') {
+                showToast(`Enrollment request is still pending coach approval.`, 'info');
+                return;
+            }
+            if (myRequest && myRequest.status === 'approved') {
+                showToast(`You are already enrolled!`, 'success');
+                return;
+            }
 
-            const alreadyEnrolled = enrolled.find(e => e.playerId === user.id);
-            if (alreadyEnrolled) { showToast('You are already enrolled!', 'info'); return; }
+            const activeEnrollments = allEnrollments.filter(e => e.academyId === academyId && e.status === 'active');
+            if (activeEnrollments.length >= academy.maxCapacity) { showToast('Sorry, this academy is full!', 'error'); return; }
 
-            // Create enrollment
-            const now = new Date();
-            const endDate = new Date(now);
-            endDate.setMonth(endDate.getMonth() + 1);
+            try {
+                // Create enrollment request
+                const enrollment = {
+                    id: DB.generateId(),
+                    academyId: academyId,
+                    playerId: user.id,
+                    playerName: user.name,
+                    enrolledAt: new Date().toISOString().split('T')[0],
+                    status: 'pending', // COACH MUST ACCEPT
+                    attendance: [],
+                    notes: ''
+                };
+                AcademyEnrollmentsStore.add(enrollment);
 
-            const enrollment = {
-                academyId: academyId,
-                playerId: user.id,
-                playerName: user.name,
-                enrolledAt: now.toISOString().split('T')[0],
-                status: 'active',
-                subscriptionEnd: endDate.toISOString().split('T')[0],
-                attendance: [],
-                notes: ''
-            };
-            EnrollmentsStore.add(enrollment);
-
-            // Show success in modal
-            document.getElementById('modalContent').innerHTML = `
-                <div class="enrollment-success">
-                    <div class="check-icon">✓</div>
-                    <h3 style="margin-bottom:var(--s-2);">Enrollment Successful!</h3>
-                    <p class="text-faint">You've enrolled in <strong style="color:var(--text-h);">${academy.name}</strong></p>
-                    <div style="margin-top:var(--s-5);padding:var(--s-4);background:var(--bg-elevated);border-radius:var(--r-md);text-align:left;">
-                        <div class="summary-row"><span class="text-faint">Monthly Rate</span><strong>${academy.monthlyPrice} EGP</strong></div>
-                        <div class="summary-row"><span class="text-faint">Start Date</span><span>${formatDate(enrollment.enrolledAt)}</span></div>
-                        <div class="summary-row"><span class="text-faint">Valid Until</span><span>${formatDate(enrollment.subscriptionEnd)}</span></div>
-                        <div class="summary-row"><span class="text-faint">Schedule</span><span>${academy.schedule}</span></div>
+                // Show Request Sent UI
+                document.getElementById('modalContent').innerHTML = `
+                    <div class="enrollment-success animate-in">
+                        <div class="check-icon" style="background:var(--warning-subtle);color:var(--warning);">📩</div>
+                        <h3 style="margin-bottom:var(--s-2);">Request Sent!</h3>
+                        <p class="text-faint">Your application to <strong style="color:var(--text-h);">${academy.name}</strong> has been sent to the coach.</p>
+                        <div style="margin-top:var(--s-5);padding:var(--s-4);background:var(--bg-elevated);border-radius:var(--r-md);text-align:left;border:1px solid var(--border);">
+                            <div class="summary-row"><span class="text-faint">Academy</span><strong>${academy.name}</strong></div>
+                            <div class="summary-row"><span class="text-faint">Status</span><span class="badge badge-warning">Pending Approval</span></div>
+                            <div class="summary-row"><span class="text-faint">Next Step</span><span class="text-xs">Wait for coach to accept your request.</span></div>
+                        </div>
+                        <button class="btn btn-primary btn-lg btn-block mt-4" onclick="closeModal()">Got it</button>
                     </div>
-                    <button class="btn btn-primary btn-lg btn-block mt-4" onclick="closeModal()">Done</button>
-                </div>
-            `;
-            showToast('Successfully enrolled! 🎉', 'success');
-
-            // Refresh academy cards in background
-            renderAcademies();
+                `;
+                showToast('Request sent to coach! 📩', 'success');
+                renderAcademies();
+            } catch (err) {
+                showToast('Failed to send request. Try again.', 'error');
+            }
         }
 
         // Initial render
@@ -718,10 +764,10 @@
         }
 
         function submitReview(academyId) {
-            if (!user || !isPlayer) { showToast('Only players can review', 'error'); return; }
+            if (!user || !Auth.hasRole('player')) { showToast('Only players can review', 'error'); return; }
 
             // Verify enrollment
-            const enrollment = EnrollmentsStore.filter(e => e.academyId === academyId && e.playerId === user.id && e.status === 'active');
+            const enrollment = AcademyEnrollmentsStore.filter(e => e.academyId === academyId && e.playerId === user.id && e.status === 'active');
             if (enrollment.length === 0) { showToast('You must be enrolled to review', 'error'); return; }
 
             // Check one review per subscription

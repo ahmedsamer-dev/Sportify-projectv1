@@ -44,25 +44,59 @@ const TournamentsStore = createStore('mal3abak_tournaments');
 
 // ---- Academy Stores (NEW — Coach Academy System) ----
 const AcademiesStore = createStore('mal3abak_academies');
-const EnrollmentsStore = createStore('mal3abak_enrollments');
+const AcademyEnrollmentsStore = createStore('mal3abak_enrollments');
+const AcademyMessagesStore = createStore('sportify_academy_messages');
 const AcademyRatingsStore = createStore('mal3abak_academy_ratings');
 const AcademyPointsStore = createStore('mal3abak_academy_points');
 
-// ---- Coach Booking Store (Independent from Pitch Booking) ----
+// ---- Enrollment State Manager ----
+const EnrollmentStates = {
+    NOT_ENROLLED: 'not_enrolled',
+    PENDING: 'pending',
+    APPROVED: 'approved',
+    REJECTED: 'rejected',
+    EXPIRED: 'expired'
+};
+
+function getEnrollmentState(academyId, playerId) {
+    if (!playerId) return EnrollmentStates.NOT_ENROLLED;
+    const enrollments = AcademyEnrollmentsStore.filter(en => en.academyId === academyId && en.playerId === playerId);
+    if (enrollments.length === 0) return EnrollmentStates.NOT_ENROLLED;
+
+    // Sort by latest
+    const latest = enrollments.sort((a, b) => new Date(b.enrolledAt) - new Date(a.enrolledAt))[0];
+
+    if (latest.status === 'pending') return EnrollmentStates.PENDING;
+    if (latest.status === 'rejected') return EnrollmentStates.REJECTED;
+    if (latest.status === 'approved' || latest.status === 'active') { // Supporting both legacy and new status
+        const end = new Date(latest.subscriptionEnd);
+        if (end < new Date()) return EnrollmentStates.EXPIRED;
+        return EnrollmentStates.APPROVED;
+    }
+
+    return EnrollmentStates.NOT_ENROLLED;
+}
+
+const CoachBookingsStore = createStore('mal3abak_coach_bookings');
+
 // ---- SPORTIFY Extension Stores ----
 const SubscriptionsStore = createStore('sportify_subscriptions');
 const FeedPostsStore = createStore('sportify_feed_posts');
 const FeedCommentsStore = createStore('sportify_feed_comments');
 const FeedReactionsStore = createStore('sportify_feed_reactions');
-const AcademyChatStore = createStore('sportify_academy_chat');
 const MatchRequestsStore = createStore('sportify_match_requests');
+const MatchMessagesStore = createStore('sportify_match_messages');
 const TournamentMatchesStore = createStore('sportify_tournament_matches');
+
+// ---- Store Aliases (Backward Compatibility) ----
+const EnrollmentsStore = AcademyEnrollmentsStore;
+const AcademyChatStore = AcademyMessagesStore;
 
 // ---- Multi-Sport Profile Stores (NEW) ----
 const SportProfilesStore = createStore('sportify_sport_profiles');
 const PlayerRatingsStore = createStore('sportify_player_ratings');
 
-const CoachBookingsStore = createStore('mal3abak_coach_bookings');
+// ---- Academy Rating Helper ----
 
 // ---- Academy Rating Helper ----
 function getAcademyRating(academyId) {
@@ -193,7 +227,9 @@ const SEED_DATA = {
         { id: 'u2', name: 'Ahmed Hassan', email: 'ahmed@mail.com', password: 'pass123', role: 'player', roles: ['player'], phone: '+20 100 000 0002', avatar: '', createdAt: '2026-01-05' },
         { id: 'u3', name: 'Sara El-Masry', email: 'sara@mail.com', password: 'pass123', role: 'player', roles: ['player'], phone: '+20 100 000 0003', avatar: '', createdAt: '2026-01-08' },
         { id: 'u4', name: 'Mohamed Ali', email: 'moh@pitch.com', password: 'pass123', role: 'pitch_owner', roles: ['pitch_owner'], phone: '+20 100 000 0004', avatar: '', createdAt: '2026-01-10' },
-        { id: 'u5', name: 'Karim Benzema', email: 'karim@coach.com', password: 'pass123', role: 'coach', roles: ['coach'], phone: '+20 100 000 0005', avatar: '', createdAt: '2026-01-12' }
+        { id: 'u5', name: 'Karim Benzema', email: 'karim@coach.com', password: 'pass123', role: 'coach', roles: ['coach'], phone: '+20 100 000 0005', avatar: '', createdAt: '2026-01-12' },
+        { id: 'u_coach_2', name: 'Zinedine Zidane', email: 'zizou@coach.com', password: '123456', role: 'coach', roles: ['coach'], phone: '+20 123 444 555', avatar: '', createdAt: '2026-02-24' },
+        { id: 'u_coach_3', name: 'Pep Guardiola', email: 'pep@coach.com', password: '123456', role: 'coach', roles: ['coach'], phone: '+20 123 666 777', avatar: '', createdAt: '2026-02-24' }
     ],
     pitches: [
         { id: 'p1', name: 'Green Arena', location: 'Nasr City, Cairo', pricePerHour: 250, ownerId: 'u4', type: '5-a-side', capacity: 10, amenities: ['Lighting', 'Parking', 'Changing Room'], rating: 4.5, image: '' },
@@ -205,7 +241,9 @@ const SEED_DATA = {
     ],
     coaches: [
         { id: 'c1', userId: 'u5', specialty: 'Attack & Finishing', experience: 12, hourlyRate: 150, rating: 4.7, bio: 'Former professional striker with 12 years of experience.' },
-        { id: 'c2', userId: 'u7', specialty: 'Fitness & Conditioning', experience: 8, hourlyRate: 120, rating: 4.5, bio: 'Certified fitness coach specializing in football conditioning.' }
+        { id: 'c2', userId: 'u7', specialty: 'Fitness & Conditioning', experience: 8, hourlyRate: 120, rating: 4.5, bio: 'Certified fitness coach specializing in football conditioning.' },
+        { id: 'c3', userId: 'u_coach_2', specialty: 'Midfield Control', experience: 15, hourlyRate: 300, rating: 5.0, bio: 'World-class midfield maestro. Learn tactical positioning and vision.' },
+        { id: 'c4', userId: 'u_coach_3', specialty: 'Tactical Awareness', experience: 14, hourlyRate: 250, rating: 4.9, bio: 'Specialist in possession-based football and complex tactical systems.' }
     ],
     bookings: [
         { id: 'b1', pitchId: 'p1', playerId: 'u2', date: '2026-02-25', timeSlot: '18:00-19:00', status: 'confirmed', totalPrice: 250 },
@@ -229,7 +267,9 @@ const SEED_DATA = {
     // ---- Academy Seed Data (NEW) ----
     academies: [
         { id: 'ac1', coachId: 'c1', coachUserId: 'u5', name: 'Benzema Striker Academy', description: 'Master the art of finishing, positioning, and clinical striking with former pro Karim Benzema. Sessions include 1-on-1 drills, match simulations, and video analysis.', category: 'Attack & Finishing', ageGroup: '16-25', level: 'Intermediate', location: 'Nasr City, Cairo', schedule: 'Sun, Tue, Thu — 5:00 PM to 7:00 PM', maxCapacity: 20, monthlyPrice: 800, rating: 4.8, status: 'active', createdAt: '2026-01-20' },
-        { id: 'ac2', coachId: 'c2', coachUserId: 'u7', name: 'Elite Fitness Football Camp', description: 'Intensive football-specific conditioning program. Build stamina, speed, and agility to dominate the pitch. Includes nutrition guidance.', category: 'Fitness & Conditioning', ageGroup: '14-30', level: 'All Levels', location: 'Heliopolis, Cairo', schedule: 'Mon, Wed, Fri — 6:00 PM to 8:00 PM', maxCapacity: 25, monthlyPrice: 600, rating: 4.5, status: 'active', createdAt: '2026-02-05' }
+        { id: 'ac2', coachId: 'c2', coachUserId: 'u7', name: 'Elite Fitness Football Camp', description: 'Intensive football-specific conditioning program. Build stamina, speed, and agility to dominate the pitch. Includes nutrition guidance.', category: 'Fitness & Conditioning', ageGroup: '14-30', level: 'All Levels', location: 'Heliopolis, Cairo', schedule: 'Mon, Wed, Fri — 6:00 PM to 8:00 PM', maxCapacity: 25, monthlyPrice: 600, rating: 4.5, status: 'active', createdAt: '2026-02-05' },
+        { id: 'ac3', coachId: 'c3', coachUserId: 'u_coach_2', name: 'Zizou Midfield Masterclass', description: 'Technique, control, and vision. Master the center of the pitch.', category: 'Tactics & Control', ageGroup: '18+', level: 'Advanced', location: 'New Cairo', schedule: 'Sat, Mon, Wed — 7:00 PM to 9:00 PM', maxCapacity: 15, monthlyPrice: 1200, rating: 5.0, status: 'active', createdAt: '2026-02-24' },
+        { id: 'ac4', coachId: 'c4', coachUserId: 'u_coach_3', name: 'Tiki-Taka Development Hub', description: 'Learn the art of high-speed passing and spatial awareness.', category: 'Tactics & Possession', ageGroup: '12-18', level: 'Intermediate', location: 'Zayed, Giza', schedule: 'Sun, Tue, Thu — 4:00 PM to 6:00 PM', maxCapacity: 20, monthlyPrice: 1000, rating: 4.9, status: 'active', createdAt: '2026-02-24' }
     ],
     enrollments: [
         { id: 'en1', academyId: 'ac1', playerId: 'u2', playerName: 'Ahmed Hassan', enrolledAt: '2026-02-01', status: 'active', subscriptionEnd: '2026-03-01', attendance: [{ date: '2026-02-02', present: true }, { date: '2026-02-04', present: true }, { date: '2026-02-06', present: false }, { date: '2026-02-09', present: true }], notes: 'Great progress on finishing drills.' },

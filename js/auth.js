@@ -6,6 +6,7 @@
 
 const Auth = {
     SESSION_KEY: 'mal3abak_session',
+    TOKEN_KEY: 'sportify_auth_token',
 
     // Get current logged-in user
     getCurrentUser() {
@@ -17,85 +18,115 @@ const Auth = {
         return this.getCurrentUser() !== null;
     },
 
-    // Login
-    login(email, password) {
+    // Simulated API call for Login
+    async login(email, password) {
+        // Validation
+        if (!email || !password) return { success: false, message: 'Please enter all fields.' };
+
+        // Simulate network delay
+        await new Promise(r => setTimeout(r, 800));
+
         const users = UsersStore.getAll();
         const user = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
-        if (!user) return { success: false, message: 'Invalid email or password' };
+
+        if (!user) return { success: false, message: 'Invalid email or password. Please try again.' };
+
         const session = { ...user };
         delete session.password;
-        // Ensure roles array is present in session
-        if (!session.roles) {
-            session.roles = [session.role];
-        }
+
+        // Ensure roles array is present for compatibility
+        if (!session.roles) session.roles = [session.role];
+
+        // Store Token & Session
+        const token = 'jwt_' + DB.generateId();
+        DB.setOne(this.TOKEN_KEY, token);
         DB.setOne(this.SESSION_KEY, session);
-        return { success: true, user: session };
+
+        return { success: true, user: session, token };
     },
 
-    // Register (supports multi-role via roles array)
-    register(name, email, password, role, phone = '', additionalRoles = []) {
+    // Registration (Extended payload)
+    async register(payload) {
+        const { name, email, password, role, age, governorate, city, preferredSport, phone } = payload;
+
+        // Validation
+        if (!name || !email || !password || !role) return { success: false, message: 'Missing required account info.' };
+        if (password.length < 6) return { success: false, message: 'Password must be at least 6 characters.' };
+        if (age && parseInt(age) < 12) return { success: false, message: 'Minimum age required is 12 years.' };
+
+        // Simulate network delay
+        await new Promise(r => setTimeout(r, 1000));
+
         const users = UsersStore.getAll();
         if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
-            return { success: false, message: 'Email already registered' };
-        }
-
-        // Build roles array: primary role + any additional roles
-        const roles = [role];
-        if (additionalRoles && additionalRoles.length > 0) {
-            additionalRoles.forEach(r => {
-                if (!roles.includes(r)) roles.push(r);
-            });
+            return { success: false, message: 'This email is already registered.' };
         }
 
         const newUser = {
             id: DB.generateId(),
-            name, email, password,
-            role,                 // legacy single role (primary)
-            roles,                // new multi-role array
-            phone, avatar: '',
+            name,
+            email,
+            password,
+            role,                 // Legacy primary role
+            roles: [role],        // Multi-role array
+            age: parseInt(age) || null,
+            governorate: governorate || '',
+            city: city || '',
+            preferredSport: preferredSport || 'football',
+            phone: phone || '',
+            avatar: '',
             createdAt: new Date().toISOString().split('T')[0]
         };
+
         UsersStore.add(newUser);
 
-        // If coach (any role combination), create coach profile
-        if (roles.includes('coach')) {
+        // If coach, initialize profile
+        if (role === 'coach') {
             CoachesStore.add({
-                userId: newUser.id, specialty: 'General',
-                experience: 0, hourlyRate: 100, rating: 0,
-                bio: 'New coach on SPORTIFY'
+                userId: newUser.id,
+                specialty: 'General',
+                experience: 0,
+                hourlyRate: 100,
+                rating: 0,
+                bio: 'Professional coach on SPORTIFY'
             });
         }
 
         const session = { ...newUser };
         delete session.password;
+
+        // Auto-login after register
+        const token = 'jwt_' + DB.generateId();
+        DB.setOne(this.TOKEN_KEY, token);
         DB.setOne(this.SESSION_KEY, session);
-        return { success: true, user: session };
+
+        return { success: true, user: session, token };
     },
 
     // Logout
     logout() {
         DB.remove(this.SESSION_KEY);
+        DB.remove(this.TOKEN_KEY);
         window.location.href = 'index.html';
     },
 
-    // Check role — backward compatible, also checks roles array
+    // Role-based Access Control
     hasRole(role) {
         const user = this.getCurrentUser();
         if (!user) return false;
-        // Check new multi-role array first
-        if (Array.isArray(user.roles) && user.roles.includes(role)) return true;
-        // Fallback to legacy single role
-        return user.role === role;
+        return (user.roles || [user.role]).includes(role);
     },
 
-    // Check if user has ANY of the given roles
-    hasAnyRole(rolesArray) {
-        const user = this.getCurrentUser();
-        if (!user) return false;
-        return RolesManager.hasAnyRole(user, rolesArray);
+    // Redirect to proper dashboard
+    getRedirectUrl(user) {
+        if (!user) return 'login.html';
+        if (user.role === 'admin') return 'admin.html';
+        if (user.role === 'coach') return 'coach-dashboard.html';
+        if (user.role === 'pitch_owner') return 'pitch-owner-dashboard.html';
+        return 'profile.html';
     },
 
-    // Require login — redirect if not authenticated
+    // Protected Route Guard
     requireAuth() {
         if (!this.isLoggedIn()) {
             window.location.href = 'login.html';
@@ -104,45 +135,12 @@ const Auth = {
         return true;
     },
 
-    // Require specific role (backward compatible)
     requireRole(role) {
         if (!this.requireAuth()) return false;
         if (!this.hasRole(role)) {
-            showToast('Access denied. Insufficient permissions.', 'error');
+            window.location.href = 'profile.html';
             return false;
         }
         return true;
-    },
-
-    // Add a role to the current user (for multi-role)
-    addRole(role) {
-        const user = this.getCurrentUser();
-        if (!user) return false;
-        const roles = RolesManager.getUserRoles(user);
-        if (roles.includes(role)) return true; // already has role
-
-        roles.push(role);
-        // Update stored user
-        const fullUser = UsersStore.getById(user.id);
-        if (fullUser) {
-            UsersStore.update(user.id, { roles });
-        }
-        // Update session
-        user.roles = roles;
-        DB.setOne(this.SESSION_KEY, user);
-        return true;
-    },
-
-    // Refresh session data from store (call after external updates)
-    refreshSession() {
-        const user = this.getCurrentUser();
-        if (!user) return;
-        const fullUser = UsersStore.getById(user.id);
-        if (fullUser) {
-            const session = { ...fullUser };
-            delete session.password;
-            if (!session.roles) session.roles = [session.role];
-            DB.setOne(this.SESSION_KEY, session);
-        }
     }
 };

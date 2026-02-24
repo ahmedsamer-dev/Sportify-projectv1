@@ -178,10 +178,8 @@
         initPage('coach-dashboard');
 
         // ---- Access Control ----
-        if (!Auth.isLoggedIn()) {
-            window.location.href = 'login.html';
-        } else if (!RolesManager.requireRoles(['coach'], 'dashContent')) {
-            // Access denied
+        if (!Auth.requireRole('coach')) {
+            // Redirected by Auth.requireRole
         } else {
             initDashboard();
         }
@@ -189,247 +187,259 @@
         function initDashboard() {
             const user = Auth.getCurrentUser();
             const coach = getCoachByUserId(user.id);
+            let activeTab = 'academies';
 
             function render() {
-                const freshCoach = getCoachByUserId(user.id);
-                // Coach Training Bookings (independent from pitch bookings)
-                const myBookings = freshCoach ? CoachBookingsStore.filter(b => b.coachId === freshCoach.id) : [];
-                const pendingBookings = myBookings.filter(b => b.status === 'pending');
-                const confirmedBookings = myBookings.filter(b => b.status === 'confirmed');
-                const upcomingBookings = confirmedBookings.filter(b => new Date(b.date) >= new Date());
-                const completedBookings = confirmedBookings.filter(b => new Date(b.date) < new Date());
-                const totalEarnings = confirmedBookings.reduce((sum, b) => sum + (b.price || 0), 0);
-
-                // Check if coach has academies
-                const hasAcademy = RolesManager.isCoachWithAcademy(user);
                 const myAcademies = AcademiesStore.filter(a => a.coachUserId === user.id);
-                const totalStudents = myAcademies.reduce((sum, a) =>
-                    sum + EnrollmentsStore.filter(e => e.academyId === a.id && e.status === 'active').length, 0
-                );
+                // Collect all enrollments for coach's academies
+                const allAcademyIds = myAcademies.map(a => a.id);
+                const allEnrollments = AcademyEnrollmentsStore.filter(e => allAcademyIds.includes(e.academyId));
+                const pendingRequests = allEnrollments.filter(e => e.status === 'pending');
+                const activeStudents = allEnrollments.filter(e => e.status === 'active');
 
                 document.getElementById('dashContent').innerHTML = `
-                    <div class="dash-header">
+                    <div class="dash-header animate-in">
                         <div>
-                            <h1>🧑‍🏫 Coach Dashboard</h1>
-                            <p class="text-faint">Manage your coaching profile, sessions, and training</p>
+                            <div class="header-badge-premium">🧑‍🏫 ACADEMY COMMAND CENTER</div>
+                            <h1 class="header-title-premium">Coach Dashboard</h1>
+                            <p class="text-faint">Manage your elite academies, enrollments, and communications.</p>
                         </div>
-                        <div style="display:flex;gap:var(--s-2);flex-wrap:wrap;">
-                            ${hasAcademy
-                        ? '<a href="academy-dashboard.html" class="btn btn-outline btn-sm">🎓 Academy Dashboard</a>'
-                        : '<a href="academy-create.html" class="btn btn-outline btn-sm">🎓 Create Academy</a>'}
-                            <a href="profile.html" class="btn btn-secondary btn-sm">👤 Profile</a>
-                        </div>
-                    </div>
-
-                    <!-- Coach Profile Hero -->
-                    <div class="coach-profile-hero animate-in">
-                        <div class="coach-avatar-big">${user.name.charAt(0).toUpperCase()}</div>
-                        <div class="coach-profile-info">
-                            <h2>${user.name}</h2>
-                            <div class="text-sm text-faint">${user.email} ${user.phone ? '· ' + user.phone : ''}</div>
-                            <div style="display:flex;gap:var(--s-2);margin-top:var(--s-2);flex-wrap:wrap;">
-                                ${RolesManager.getRoleBadgesHTML(user)}
-                                ${hasAcademy ? '<span class="badge badge-primary">🎓 Academy Owner</span>' : ''}
-                            </div>
-                            ${freshCoach ? `
-                            <div style="margin-top:var(--s-3);display:flex;gap:var(--s-4);flex-wrap:wrap;">
-                                <div class="text-sm"><strong>Specialty:</strong> ${freshCoach.specialty}</div>
-                                <div class="text-sm"><strong>Experience:</strong> ${freshCoach.experience} yrs</div>
-                                <div class="text-sm"><strong>Rate:</strong> <span style="color:var(--accent);">${freshCoach.hourlyRate} EGP/hr</span></div>
-                                <div class="text-sm" style="color:var(--warning);">${getStarRating(freshCoach.rating)} ${freshCoach.rating}</div>
-                            </div>` : ''}
-                        </div>
-                        <button class="btn btn-primary btn-sm" onclick="openEditProfile()">✏️ Edit Profile</button>
-                    </div>
-
-                    <!-- Stats -->
-                    <div class="grid grid-4 mb-3">
-                        <div class="stat-card animate-in">
-                            <div class="stat-value" style="color:var(--warning);">${pendingBookings.length}</div>
-                            <div class="stat-label">Pending Requests</div>
-                        </div>
-                        <div class="stat-card animate-in animate-delay-1">
-                            <div class="stat-value">${upcomingBookings.length}</div>
-                            <div class="stat-label">Upcoming Sessions</div>
-                        </div>
-                        <div class="stat-card animate-in animate-delay-2">
-                            <div class="stat-value" style="color:var(--accent);">${totalEarnings.toLocaleString()}</div>
-                            <div class="stat-label">Total Earnings (EGP)</div>
-                        </div>
-                        <div class="stat-card animate-in animate-delay-3">
-                            <div class="stat-value">${totalStudents}</div>
-                            <div class="stat-label">Academy Students</div>
+                        <div class="flex-gap-2">
+                             <a href="academy-create.html" class="btn btn-primary btn-sm">+ Launch New Academy</a>
+                             <a href="profile.html" class="btn btn-ghost btn-sm">👤 My Profile</a>
                         </div>
                     </div>
 
-                    <!-- Quick Actions -->
-                    <div class="quick-action-bar animate-in">
-                        <button class="btn btn-primary btn-sm" onclick="openEditProfile()">✏️ Edit Profile</button>
-                        ${!hasAcademy ? '<a href="academy-create.html" class="btn btn-accent btn-sm">🎓 Create Academy</a>' : ''}
-                        ${hasAcademy ? '<a href="academy-dashboard.html" class="btn btn-accent btn-sm">🎓 Academy Dashboard</a>' : ''}
-                        <span class="badge badge-info" style="margin-left:auto;padding:8px 14px;">
-                            ${freshCoach ? '⭐ ' + freshCoach.rating + ' rating' : '🆕 New Coach'}
-                        </span>
-                    </div>
-
-                    <!-- Tabs -->
-                    <div class="dash-tabs">
-                        <button class="dash-tab active" onclick="switchTab('sessions')">📋 Sessions (${myBookings.length})</button>
-                        <button class="dash-tab" onclick="switchTab('upcoming')">⏰ Upcoming (${upcomingBookings.length})</button>
-                        ${hasAcademy ? `<button class="dash-tab" onclick="switchTab('academies')">🎓 Academies (${myAcademies.length})</button>` : ''}
-                    </div>
-
-                    <!-- Sessions Tab -->
-                    <div class="tab-content active" id="tab-sessions">
-                        <div class="card">
-                            <h3 style="margin-bottom:var(--s-5);">All Coaching Sessions</h3>
-                            ${myBookings.length === 0
-                        ? '<p class="text-faint text-center" style="padding:var(--s-6);">No coaching sessions yet. Players will find you on the booking page! 💪</p>'
-                        : `<div class="table-wrapper"><table>
-                                <thead><tr><th>Pitch</th><th>Player</th><th>Date</th><th>Time</th><th>Status</th></tr></thead>
-                                <tbody>${myBookings.sort((a, b) => new Date(b.date) - new Date(a.date)).map(b => {
-                            const p = PitchesStore.getById(b.pitchId);
-                            const player = getUserById(b.playerId);
-                            const sc = b.status === 'confirmed' ? 'badge-accent' : b.status === 'pending' ? 'badge-warning' : 'badge-danger';
-                            return `<tr>
-                                        <td><strong style="color:var(--text-h);">${p ? p.name : '—'}</strong><br><span class="text-xs text-faint">${p ? p.location : ''}</span></td>
-                                        <td>${player ? player.name : '—'}</td>
-                                        <td>${formatDate(b.date)}</td>
-                                        <td>${b.timeSlot}</td>
-                                        <td><span class="badge ${sc}">${b.status}</span></td>
-                                    </tr>`;
-                        }).join('')}</tbody>
-                            </table></div>`}
+                    <div class="grid grid-4 gap-4 mb-8">
+                        <div class="card bg-elevated border-soft animate-in">
+                            <div class="text-xs text-faint uppercase font-bold mb-1">Active Academies</div>
+                            <div class="text-2xl font-black gradient-text">${myAcademies.length}</div>
+                        </div>
+                        <div class="card bg-elevated border-soft animate-in animate-delay-1">
+                            <div class="text-xs text-faint uppercase font-bold mb-1">Total Students</div>
+                            <div class="text-2xl font-black" style="color:var(--primary);">${activeStudents.length}</div>
+                        </div>
+                        <div class="card bg-elevated border-soft animate-in animate-delay-2">
+                            <div class="text-xs text-faint uppercase font-bold mb-1">Pending Requests</div>
+                            <div class="text-2xl font-black ${pendingRequests.length > 0 ? 'text-warning' : ''}" style="color:${pendingRequests.length > 0 ? 'var(--warning)' : 'var(--text-faint)'};">${pendingRequests.length}</div>
+                        </div>
+                        <div class="card bg-elevated border-soft animate-in animate-delay-3">
+                            <div class="text-xs text-faint uppercase font-bold mb-1">Active Subscriptions</div>
+                            <div class="text-2xl font-black" style="color:var(--accent);">${activeStudents.length}</div>
                         </div>
                     </div>
 
-                    <!-- Upcoming Tab -->
-                    <div class="tab-content" id="tab-upcoming">
-                        <div class="card">
-                            <h3 style="margin-bottom:var(--s-5);">Upcoming Sessions</h3>
-                            ${upcomingBookings.length === 0
-                        ? '<p class="text-faint text-center" style="padding:var(--s-6);">No upcoming sessions. 📅</p>'
-                        : `<div style="padding:0;overflow:hidden;">
-                                ${upcomingBookings.sort((a, b) => new Date(a.date) - new Date(b.date)).map(b => {
-                            const p = PitchesStore.getById(b.pitchId);
-                            const player = getUserById(b.playerId);
+                    <div class="dash-tabs animate-in">
+                        <button class="dash-tab ${activeTab === 'academies' ? 'active' : ''}" onclick="switchTab('academies')">🎓 Managed Academies</button>
+                        <button class="dash-tab ${activeTab === 'requests' ? 'active' : ''}" onclick="switchTab('requests')">📩 Enrollment Requests ${pendingRequests.length > 0 ? `<span class="badge badge-warning ml-2">${pendingRequests.length}</span>` : ''}</button>
+                        <button class="dash-tab ${activeTab === 'chat' ? 'active' : ''}" onclick="switchTab('chat')">💬 Academy Messenger</button>
+                    </div>
+
+                    <!-- Managed Academies -->
+                    <div class="tab-content ${activeTab === 'academies' ? 'active' : ''}" id="tab-academies">
+                        <div class="grid grid-2 gap-6">
+                            ${myAcademies.length === 0
+                        ? '<div class="card full-width text-center p-12"><p class="text-faint">You haven\'t created any academies yet.</p><a href="academy-create.html" class="btn btn-primary mt-4">Create Your First Academy</a></div>'
+                        : myAcademies.map(a => {
+                            const enCount = activeStudents.filter(e => e.academyId === a.id).length;
                             return `
-                                    <div class="session-card">
-                                        <div class="session-icon" style="background:var(--accent-subtle);">📅</div>
-                                        <div class="session-info">
-                                            <div style="font-weight:700;color:var(--text-h);">${player ? player.name : 'Player'}</div>
-                                            <div class="text-sm text-faint">${p ? p.name + ' — ' + p.location : ''}</div>
-                                            <div class="text-sm">${formatDate(b.date)} · ${b.timeSlot}</div>
+                                        <div class="card bg-elevated border-soft flex-col">
+                                            <div class="flex-between mb-4">
+                                                <div>
+                                                    <h3 class="font-bold text-lg">${a.name}</h3>
+                                                    <span class="text-xs text-faint">${a.category} · ${a.location}</span>
+                                                </div>
+                                                <span class="badge ${a.status === 'active' ? 'badge-accent' : 'badge-warning'}">${a.status.toUpperCase()}</span>
+                                            </div>
+                                            <div class="grid grid-3 gap-2 mb-6">
+                                                <div class="text-center p-2 bg-darker rounded">
+                                                    <div class="text-xs text-faint">Students</div>
+                                                    <div class="font-bold">${enCount}</div>
+                                                </div>
+                                                <div class="text-center p-2 bg-darker rounded">
+                                                    <div class="text-xs text-faint">Capacity</div>
+                                                    <div class="font-bold">${a.maxCapacity}</div>
+                                                </div>
+                                                <div class="text-center p-2 bg-darker rounded">
+                                                    <div class="text-xs text-faint">Rating</div>
+                                                    <div class="font-bold" style="color:var(--warning);">⭐ ${a.rating}</div>
+                                                </div>
+                                            </div>
+                                            <div class="flex-gap-2 mt-auto">
+                                                <a href="academy-dashboard.html?academy=${a.id}" class="btn btn-primary btn-sm flex-1">View Academy</a>
+                                                <button class="btn btn-outline btn-sm" onclick="editAcademy('${a.id}')">Edit</button>
+                                            </div>
                                         </div>
-                                        <span class="badge badge-accent">Confirmed</span>
-                                    </div>`;
+                                    `;
+                        }).join('')
+                    }
+                        </div>
+                    </div>
+
+                    <!-- Enrollment Requests -->
+                    <div class="tab-content ${activeTab === 'requests' ? 'active' : ''}" id="tab-requests">
+                        <div class="card">
+                            <h3 class="mb-4">Pending Enrollment Requests</h3>
+                            ${pendingRequests.length === 0
+                        ? '<p class="text-faint text-center p-8">No pending requests at the moment.</p>'
+                        : `
+                                <div class="table-wrapper">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Player Name</th>
+                                                <th>Academy</th>
+                                                <th>Request Date</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${pendingRequests.map(r => {
+                            const acad = AcademiesStore.getById(r.academyId);
+                            return `
+                                                    <tr>
+                                                        <td class="font-bold">${r.playerName}</td>
+                                                        <td>${acad ? acad.name : 'Unknown Academy'}</td>
+                                                        <td>${formatDate(r.enrolledAt)}</td>
+                                                        <td>
+                                                            <div class="flex-gap-2">
+                                                                <button class="btn btn-accent btn-xs" onclick="updateRequest('${r.id}', 'approved')">Accept</button>
+                                                                <button class="btn btn-error btn-xs" onclick="updateRequest('${r.id}', 'rejected')">Reject</button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                `;
                         }).join('')}
-                            </div>`}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                `
+                    }
                         </div>
                     </div>
 
-                    <!-- Academies Tab (only if coach has academies) -->
-                    ${hasAcademy ? `
-                    <div class="tab-content" id="tab-academies">
-                        <div class="card">
-                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--s-5);">
-                                <h3>🎓 My Academies</h3>
-                                <a href="academy-create.html" class="btn btn-primary btn-sm">+ New Academy</a>
-                            </div>
-                            ${myAcademies.map(a => {
-                            const enrollCount = EnrollmentsStore.filter(e => e.academyId === a.id && e.status === 'active').length;
-                            return `
-                                <div class="session-card">
-                                    <div class="session-icon" style="background:var(--primary-subtle);">🎓</div>
-                                    <div class="session-info">
-                                        <div style="font-weight:700;color:var(--text-h);">${a.name}</div>
-                                        <div class="text-sm text-faint">${a.category} · ${a.location}</div>
-                                        <div style="display:flex;gap:var(--s-2);margin-top:4px;">
-                                            <span class="badge badge-neutral">${enrollCount}/${a.maxCapacity} enrolled</span>
-                                            <span class="badge ${a.status === 'active' ? 'badge-accent' : 'badge-warning'}">${a.status}</span>
+                    <!-- Academy Messenger -->
+                    <div class="tab-content ${activeTab === 'chat' ? 'active' : ''}" id="tab-chat">
+                        <div class="card p-0 overflow-hidden hb-messenger">
+                            <div class="messenger-grid">
+                                <div class="messenger-sidebar bg-elevated border-right">
+                                    <div class="p-4 border-bottom font-bold text-sm tracking-wider uppercase opacity-50">Academies</div>
+                                    ${myAcademies.map(a => `
+                                        <div class="messenger-item p-4 border-bottom cursor-pointer hover-bg" onclick="selectChatAcademy('${a.id}')" id="chat-item-${a.id}">
+                                            <div class="font-bold text-sm">${a.name}</div>
+                                            <div class="text-xs text-faint">Group Chat</div>
                                         </div>
+                                    `).join('')}
+                                </div>
+                                <div class="messenger-body flex-col">
+                                    <div id="messengerHeader" class="p-4 border-bottom flex-between bg-elevated">
+                                        <div class="font-bold">Select an academy to start chatting</div>
                                     </div>
-                                    <a href="academy-dashboard.html" class="btn btn-outline btn-sm">Manage →</a>
-                                </div>`;
-                        }).join('')}
+                                    <div id="messengerHistory" class="messenger-history p-4 flex-1">
+                                        <div class="text-center mt-20 text-faint">Select a conversation from the left to view messages.</div>
+                                    </div>
+                                    <form id="messengerForm" class="p-4 bg-elevated border-top flex-gap-2" style="display:none;" onsubmit="sendMessengerMessage(event)">
+                                        <input type="hidden" id="activeChatId">
+                                        <input type="text" class="form-input text-sm flex-1" id="messengerInput" placeholder="Type a message to the group...">
+                                        <button type="submit" class="btn btn-primary btn-sm px-6">Send</button>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
-                    </div>` : ''}
+                    </div>
                 `;
             }
 
             render();
 
-            // ---- Tab Switching ----
-            window.switchTab = function (tab) {
-                document.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-                const tabs = document.querySelectorAll('.dash-tab');
-                const tabIds = ['sessions', 'upcoming', 'academies'];
-                const idx = tabIds.indexOf(tab);
-                if (idx >= 0 && tabs[idx]) tabs[idx].classList.add('active');
-                const el = document.getElementById('tab-' + tab);
-                if (el) el.classList.add('active');
-            };
-
-            // ---- Edit Profile Modal ----
-            window.openEditProfile = function () {
-                const freshCoach = getCoachByUserId(user.id);
-                document.getElementById('editModalContent').innerHTML = `
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--s-5);">
-                        <h3>✏️ Edit Coach Profile</h3>
-                        <button class="btn btn-ghost btn-sm" onclick="closeEditModal()" style="font-size:1.2rem;">✕</button>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Specialty *</label>
-                        <select class="form-select" id="editSpecialty">
-                            ${['General', 'Attack & Finishing', 'Fitness & Conditioning', 'Defense & Tactics', 'Goalkeeping', 'Midfield & Passing', 'Youth Development'].map(s =>
-                    `<option value="${s}" ${freshCoach && freshCoach.specialty === s ? 'selected' : ''}>${s}</option>`
-                ).join('')}
-                        </select>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">Experience (years) *</label>
-                            <input class="form-input" type="number" id="editExp" min="0" max="50" value="${freshCoach ? freshCoach.experience : 0}">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Hourly Rate (EGP) *</label>
-                            <input class="form-input" type="number" id="editRate" min="50" step="25" value="${freshCoach ? freshCoach.hourlyRate : 100}">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Bio</label>
-                        <textarea class="form-textarea" id="editBio" rows="3" placeholder="Tell players about yourself...">${freshCoach ? freshCoach.bio : ''}</textarea>
-                    </div>
-                    <button class="btn btn-primary btn-block" onclick="saveProfile()">Save Changes</button>
-                `;
-                document.getElementById('editModal').classList.add('active');
-            };
-
-            window.closeEditModal = function () {
-                document.getElementById('editModal').classList.remove('active');
-            };
-
-            window.saveProfile = function () {
-                const freshCoach = getCoachByUserId(user.id);
-                if (!freshCoach) { showToast('Coach profile not found', 'error'); return; }
-
-                const specialty = document.getElementById('editSpecialty').value;
-                const experience = parseInt(document.getElementById('editExp').value) || 0;
-                const hourlyRate = parseInt(document.getElementById('editRate').value) || 100;
-                const bio = document.getElementById('editBio').value.trim();
-
-                CoachesStore.update(freshCoach.id, { specialty, experience, hourlyRate, bio });
-                closeEditModal();
-                showToast('Profile updated! ✨', 'success');
+            window.switchTab = (tab) => {
+                activeTab = tab;
                 render();
             };
+
+            window.updateRequest = (id, status) => {
+                const req = AcademyEnrollmentsStore.getById(id);
+                if (!req) return;
+                const academy = AcademiesStore.getById(req.academyId);
+                if (!academy || academy.coachUserId !== user.id) {
+                    showToast('Access denied: You do not own this academy.', 'error');
+                    return;
+                }
+
+                AcademyEnrollmentsStore.update(id, {
+                    status: status,
+                    subscriptionEnd: status === 'approved' ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : null
+                });
+                showToast(`Request ${status === 'approved' ? 'accepted' : 'rejected'}`, 'success');
+                render();
+            };
+
+            let selectedAcademyId = null;
+            window.selectChatAcademy = (id) => {
+                selectedAcademyId = id;
+                const acad = AcademiesStore.getById(id);
+                document.getElementById('activeChatId').value = id;
+                document.getElementById('messengerHeader').innerHTML = `
+                    <div>
+                        <div class="font-bold">${acad.name}</div>
+                        <div class="text-xs text-primary">Group Chat (${AcademyEnrollmentsStore.filter(e => e.academyId === id && (e.status === 'active' || e.status === 'approved')).length} Members)</div>
+                    </div>
+                `;
+                document.getElementById('messengerForm').style.display = 'flex';
+                loadChatHistory();
+
+                document.querySelectorAll('.messenger-item').forEach(i => i.classList.remove('active-chat'));
+                document.getElementById('chat-item-' + id).classList.add('active-chat');
+            };
+
+            function loadChatHistory() {
+                if (!selectedAcademyId) return;
+                const msgs = AcademyMessagesStore.filter(m => m.toId === selectedAcademyId || m.fromId === selectedAcademyId);
+                const history = document.getElementById('messengerHistory');
+                history.innerHTML = msgs.length === 0
+                    ? '<div class="text-center mt-10 text-faint">No messages yet. Start the conversation!</div>'
+                    : msgs.map(m => {
+                        const isMe = m.fromId === user.id;
+                        return `
+                            <div class="chat-bubble-wrap ${isMe ? 'chat-me' : 'chat-them'}">
+                                ${!isMe ? `<div class="chat-sender-name">${m.senderName || 'Student'}</div>` : ''}
+                                <div class="chat-bubble">${m.text}</div>
+                                <div class="chat-time">${formatTimeAgo(m.timestamp)}</div>
+                            </div>
+                        `;
+                    }).join('');
+                history.scrollTop = history.scrollHeight;
+            }
+
+            window.sendMessengerMessage = (e) => {
+                e.preventDefault();
+                const input = document.getElementById('messengerInput');
+                const text = input.value.trim();
+                const academyId = document.getElementById('activeChatId').value;
+                if (!text || !academyId) return;
+
+                AcademyMessagesStore.add({
+                    fromId: user.id,
+                    toId: academyId,
+                    senderName: user.name,
+                    text: text,
+                    timestamp: new Date().toISOString()
+                });
+
+                input.value = '';
+                loadChatHistory();
+            };
+
+            // Dynamic polling for chat
+            setInterval(() => {
+                if (activeTab === 'chat' && selectedAcademyId) loadChatHistory();
+            }, 5000);
         }
 
-        // Click outside modal to close
-        document.getElementById('editModal').addEventListener('click', function (e) {
-            if (e.target === this) window.closeEditModal?.();
-        });
+        // Click outside modal helper
+        window.closeEditModal = function () {
+            document.getElementById('editModal').classList.remove('active');
+        };
     </script>
 </body>
 

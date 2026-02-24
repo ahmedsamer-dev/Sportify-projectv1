@@ -182,6 +182,8 @@
                 return { ...c, userName: u ? u.name : 'Coach' };
             });
 
+            console.log("Coaches data:", coaches);
+
             // Filter
             if (search) {
                 coaches = coaches.filter(c =>
@@ -214,7 +216,34 @@
 
             container.innerHTML = coaches.map(c => {
                 // Check if this coach has any academies
-                const academies = AcademiesStore.filter(a => a.coachId === c.id);
+                const coachAcademies = AcademiesStore.filter(a => a.coachId === c.id);
+                const firstAcademy = coachAcademies[0];
+                const currentUser = Auth.getCurrentUser();
+
+                let enrollmentHtml = '';
+                if (currentUser && firstAcademy) {
+                    const state = getEnrollmentState(firstAcademy.id, currentUser.id);
+
+                    switch (state) {
+                        case EnrollmentStates.PENDING:
+                            enrollmentHtml = `<div class="enrollment-status status-pending">⏳ Waiting Coach Approval</div>`;
+                            break;
+                        case EnrollmentStates.ACTIVE:
+                            enrollmentHtml = `
+                                <div class="enrollment-status status-enrolled">✓ You Enrolled</div>
+                                <a href="academy-dashboard.html?academy=${firstAcademy.id}" class="btn btn-primary btn-sm mt-1">View Academy</a>
+                            `;
+                            break;
+                        case EnrollmentStates.EXPIRED:
+                            enrollmentHtml = `<a href="coach-booking.html?coach=${c.id}" class="btn btn-error btn-sm">Renew Enrollment</a>`;
+                            break;
+                        default:
+                            enrollmentHtml = `<a href="coach-booking.html?coach=${c.id}" class="btn btn-primary btn-sm">Book Training</a>`;
+                    }
+                } else {
+                    enrollmentHtml = `<a href="coach-booking.html?coach=${c.id}" class="btn btn-primary btn-sm">Book Training</a>`;
+                }
+
                 const totalSessions = CoachBookingsStore.filter(b => b.coachId === c.id && b.status === 'confirmed').length;
 
                 return `
@@ -222,19 +251,20 @@
                     <div class="coach-card-avatar">${c.userName.charAt(0).toUpperCase()}</div>
                     <div class="coach-card-info">
                         <h3>${c.userName}</h3>
-                        <div class="text-sm text-faint">${c.specialty} · ${c.experience} yrs experience</div>
-                        <div class="text-sm" style="color:var(--warning);margin-top:4px;">${getStarRating(c.rating)} ${c.rating}</div>
-                        <p class="text-sm" style="margin-top:var(--s-2);color:var(--text-p);">${c.bio}</p>
+                        <div class="text-sm c-faint">${c.specialty} · ${c.experience} yrs experience</div>
+                        <div class="text-sm mt-1 c-warning">${getStarRating(c.rating)} ${c.rating}</div>
+                        <p class="text-sm mt-2 c-faint">${c.bio}</p>
                         <div class="coach-tags">
                             <span class="badge badge-info">${c.specialty}</span>
                             <span class="badge badge-neutral">${totalSessions} session${totalSessions !== 1 ? 's' : ''} completed</span>
-                            ${academies.length > 0 ? `<span class="badge badge-primary">🎓 ${academies.length} Academy</span>` : ''}
+                            ${coachAcademies.length > 0 ? `<span class="badge badge-primary">🎓 ${coachAcademies.length} Academy</span>` : ''}
                         </div>
                     </div>
                     <div class="coach-card-actions">
-                        <div class="coach-card-price">${c.hourlyRate} EGP<span class="text-xs text-faint" style="font-weight:400;">/hr</span></div>
-                        <a href="coach-booking.html?coach=${c.id}" class="btn btn-primary btn-sm">Book Training</a>
-                        ${academies.length > 0 ? `<a href="academies.html" class="btn btn-outline btn-sm">View Academy</a>` : ''}
+                        <div class="coach-card-price">${c.hourlyRate} EGP<span class="text-xs c-faint font-bold">/hr</span></div>
+                        <div class="flex-col gap-2" style="align-items:flex-end;">
+                            ${enrollmentHtml}
+                        </div>
                     </div>
                 </div>`;
             }).join('');

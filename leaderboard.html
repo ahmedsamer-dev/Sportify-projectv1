@@ -471,9 +471,13 @@
                     const isMe = me && p.userId === me.id;
                     html += `
           <div class="podium-spot ${positions[i]}">
-            <div class="podium-avatar">${p.userName.charAt(0)}</div>
+            <a href="profile.html?id=${p.userId}" class="podium-avatar-link">
+              <div class="podium-avatar">${p.userName.charAt(0)}</div>
+            </a>
             <div class="podium-info">
-              <div class="podium-name">${p.userName}${isMe ? ' ⭐' : ''}</div>
+              <a href="profile.html?id=${p.userId}" class="podium-name-link">
+                <div class="podium-name">${p.userName}${isMe ? ' ⭐' : ''}</div>
+              </a>
               <div class="podium-stat">${p.positionConfig.icon} ${p.positionConfig.label}</div>
               <div class="podium-value" style="color:${getMetricColor(metric)};">${formatValue(val, metric)}</div>
             </div>
@@ -492,7 +496,7 @@
                 const val = getPlayerValue(p, metric);
 
                 html += `
-        <div class="lb-table-row ${isMe ? 'is-me' : ''}">
+        <div class="lb-table-row ${isMe ? 'is-me' : ''}" onclick="window.location.href='profile.html?id=${p.userId}'" style="cursor:pointer;">
           <div class="lb-t-rank ${rankClass}">${p.rank <= 3 ? ['🥇', '🥈', '🥉'][p.rank - 1] : p.rank}</div>
           <div class="lb-t-avatar">${p.userName.charAt(0)}</div>
           <div class="lb-t-info">

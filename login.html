@@ -125,16 +125,43 @@
             document.getElementById('password').value = pass;
         }
 
-        function handleLogin(e) {
+        async function handleLogin(e) {
             e.preventDefault();
-            const result = Auth.login(document.getElementById('email').value, document.getElementById('password').value);
-            if (result.success) {
-                window.location.href = result.user.role === 'admin' ? 'admin.html' : 'profile.html';
-            } else {
-                const err = document.getElementById('errorMsg');
-                err.textContent = result.message;
-                err.style.display = 'block';
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                // UI Loading
+                btn.disabled = true;
+                btn.innerHTML = `<span class="spinner"></span> Scouting Profile...`;
+                hideError();
+
+                const result = await Auth.login(email, password);
+
+                if (result.success) {
+                    window.location.href = Auth.getRedirectUrl(result.user);
+                } else {
+                    showError(result.message);
+                }
+            } catch (err) {
+                showError("The stadium gates are temporarily closed. Please try again.");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
             }
+        }
+
+        function showError(msg) {
+            const err = document.getElementById('errorMsg');
+            err.textContent = msg;
+            err.style.display = 'block';
+            err.classList.add('animate-shake');
+        }
+
+        function hideError() {
+            document.getElementById('errorMsg').style.display = 'none';
         }
     </script>
 </body>

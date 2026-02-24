@@ -171,14 +171,108 @@
             font-family: var(--font-display);
         }
 
-        @media (max-width: 960px) {
-            .match-layout {
-                grid-template-columns: 1fr;
-            }
+        /* ---- Match Chat (NEW) ---- */
+        .match-chat-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 350px;
+            height: 450px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-glow);
+            border-radius: var(--r-xl);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            transform: translateY(calc(100% + 40px));
+            transition: transform 0.4s var(--ease);
+            overflow: hidden;
+        }
 
-            .create-match-card {
-                position: static;
-            }
+        .match-chat-panel.active {
+            transform: translateY(0);
+        }
+
+        .match-chat-header {
+            padding: var(--s-4);
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            color: var(--bg-body);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .match-chat-messages {
+            flex: 1;
+            padding: var(--s-4);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: var(--s-3);
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-msg {
+            max-width: 85%;
+            padding: 8px 12px;
+            border-radius: var(--r-lg);
+            font-size: 0.85rem;
+            position: relative;
+        }
+
+        .chat-msg.sent {
+            align-self: flex-end;
+            background: var(--primary);
+            color: var(--bg-body);
+            border-bottom-right-radius: 2px;
+        }
+
+        .chat-msg.received {
+            align-self: flex-start;
+            background: var(--bg-elevated);
+            color: var(--text-p);
+            border-bottom-left-radius: 2px;
+        }
+
+        .chat-msg-info {
+            font-size: 0.65rem;
+            opacity: 0.7;
+            margin-bottom: 2px;
+        }
+
+        .match-chat-input {
+            padding: var(--s-3);
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: var(--s-2);
+        }
+
+        .chat-toggle-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: var(--r-full);
+            background: var(--primary);
+            color: var(--bg-body);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: var(--primary-glow);
+            z-index: 999;
+            transition: all var(--t-base);
+        }
+
+        .chat-toggle-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .chat-toggle-btn.hidden {
+            display: none;
         }
     </style>
 </head>
@@ -209,6 +303,24 @@
         </section>
         <div id="footer"></div>
     </div>
+
+    <!-- Match Chat Panel -->
+    <div class="match-chat-panel" id="matchChatPanel">
+        <div class="match-chat-header">
+            <div style="display:flex;align-items:center;gap:var(--s-2);">
+                <span id="chatTitle">Match Chat</span>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="toggleChat()"
+                style="color:inherit;padding:2px 8px;">✕</button>
+        </div>
+        <div class="match-chat-messages" id="chatMessages"></div>
+        <div class="match-chat-input">
+            <input type="text" class="form-input" id="chatInputField" placeholder="Type a message..." style="margin:0;">
+            <button class="btn btn-primary btn-sm" onclick="sendChatMessage()">Send</button>
+        </div>
+    </div>
+
+    <div class="chat-toggle-btn hidden" id="chatToggle" onclick="toggleChat()">💬</div>
 
     <!-- Match Result Modal -->
     <div class="modal-overlay" id="resultModal">
@@ -244,6 +356,7 @@
     <script src="js/subscription.js"></script>
     <script src="js/race-guard.js"></script>
     <script src="js/matchmaking.js"></script>
+    <script src="js/match-chat.js"></script>
     <script src="js/app.js"></script>
     <script>
         initPage('matchmaking');
@@ -277,8 +390,11 @@
                 const fillPercent = Math.round((match.playersJoined.length / match.maxPlayers) * 100);
                 const spotsLeft = match.maxPlayers - match.playersJoined.length;
                 const isMine = isLogged && match.playersJoined.some(p => p.userId === user.id);
+                const isHost = isLogged && match.hostId === user.id;
                 const isCreator = isLogged && match.creatorId === user.id;
                 const skillClass = `skill-${match.skillLevel}`;
+                const requests = match.requests || [];
+                const myRequest = isLogged ? requests.find(r => r.userId === user.id) : null;
 
                 html += `
                 <div class="match-card animate-in" style="animation-delay:${i * 0.06}s;">
@@ -300,24 +416,44 @@
                         ${Array(spotsLeft).fill(0).map(() => '<div class="player-dot empty">?</div>').join('')}
                     </div>
 
+                    ${isHost && requests.length > 0 ? `
+                    <div style="margin-top:var(--s-4);padding:var(--s-3);background:var(--primary-subtle);border-radius:var(--r-md);border:1px dashed var(--primary-border);">
+                        <div class="text-xs font-bold mb-2 uppercase tracking-wide">Pending Requests (${requests.length})</div>
+                        ${requests.map(r => `
+                            <div class="flex-between py-1 border-soft-top">
+                                <span class="text-sm">${r.name}</span>
+                                <div class="flex gap-1">
+                                    <button class="btn btn-xs btn-primary" onclick="handleRequest('${match.id}', '${r.userId}', 'approved')">Approve</button>
+                                    <button class="btn btn-xs btn-outline" onclick="handleRequest('${match.id}', '${r.userId}', 'rejected')">Reject</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>` : ''}
+
                     <div class="progress-bar-wrap">
                         <div class="progress-bar-fill" style="width:${fillPercent}%"></div>
                     </div>
 
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--s-3);">
                         <div class="text-sm text-faint">
-                            ${match.playersJoined.length}/${match.maxPlayers} players · Created by <strong style="color:var(--text-h);">${match.creatorName}</strong>
+                            ${match.playersJoined.length}/${match.maxPlayers} players · Hosted by <strong style="color:var(--text-h);">${match.creatorName}</strong>
                         </div>
                         <div style="display:flex;gap:var(--s-2);">
-                             ${isCreator
-                        ? `<button class="btn btn-danger btn-sm" onclick="cancelMatch('${match.id}')">Cancel</button>
-                           ${match.status === 'full' && !match.result ? `<button class="btn btn-primary btn-sm" onclick="openResultModal('${match.id}')">Submit Result</button>` : ''}`
+                             ${isHost
+                        ? `<button class="btn btn-danger btn-sm" onclick="cancelMatch('${match.id}')">Cancel Match</button>
+                           ${match.status === 'full' && !match.result ? `<button class="btn btn-primary btn-sm" onclick="openResultModal('${match.id}')">Submit Result</button>` : ''}
+                           ${isMine ? `<button class="btn btn-accent btn-sm" onclick="openMatchChat('${match.id}')">Chat 💬</button>` : ''}`
                         : isMine
-                            ? `<button class="btn btn-secondary btn-sm" onclick="leaveMatch('${match.id}')">Leave</button>
+                            ? `<button class="btn btn-accent btn-sm" onclick="openMatchChat('${match.id}')">Chat 💬</button>
+                               <button class="btn btn-secondary btn-sm" onclick="leaveMatch('${match.id}')">Leave</button>
                                ${match.resultStatus === 'pending' && !match.result.confirmations.includes(user.id) ? `<button class="btn btn-accent btn-sm" onclick="confirmResult('${match.id}')">Confirm Result ✓</button>` : ''}`
-                            : isLogged
-                                ? `<button class="btn btn-accent btn-sm" onclick="joinMatch('${match.id}')">Join Match ⚡</button>`
-                                : `<a href="login.html" class="btn btn-primary btn-sm">Log in to join</a>`
+                            : myRequest
+                                ? `<button class="btn btn-outline btn-sm" disabled>Request Pending...</button>`
+                                : isLogged
+                                    ? Auth.hasRole('player')
+                                        ? `<button class="btn btn-accent btn-sm" onclick="joinMatch('${match.id}')">Request to Join ⚡</button>`
+                                        : `<span class="text-xs text-faint">Players only</span>`
+                                    : `<a href="login.html" class="btn btn-primary btn-sm">Log in to join</a>`
                     }
                         </div>
                     </div>
@@ -386,7 +522,8 @@
                         <label class="form-label">Notes</label>
                         <textarea class="form-textarea" id="mNotes" rows="2" placeholder="Any details..."></textarea>
                     </div>
-                    <button class="btn btn-primary btn-block" onclick="createMatch()">Create Match 🚀</button>
+                    <button class="btn btn-primary btn-block" onclick="createMatch()" ${!Auth.hasRole('player') ? 'disabled' : ''}>Create Match 🚀</button>
+                    ${!Auth.hasRole('player') ? '<p class="text-xs text-center mt-2 text-warning">Only players can create matches</p>' : ''}
                 </div>`;
             } else {
                 createForm = `
@@ -507,9 +644,79 @@
         renderMatches();
         renderSidebar();
 
+        function handleRequest(matchId, playerId, status) {
+            const res = MatchmakingManager.handleRequest(matchId, playerId, status);
+            if (res.success) {
+                showToast(status === 'approved' ? 'Player approved!' : 'Request rejected', 'info');
+                renderMatches();
+            } else {
+                showToast(res.message, 'error');
+            }
+        }
+
+        // ---- CHAT LOGIC ----
+        let currentChatMatchId = null;
+
+        function openMatchChat(matchId) {
+            currentChatMatchId = matchId;
+            const match = MatchmakingManager.getMatch(matchId);
+            document.getElementById('chatTitle').textContent = `Match: ${match.location}`;
+            document.getElementById('matchChatPanel').classList.add('active');
+            document.getElementById('chatToggle').classList.add('hidden');
+            renderChatMessages();
+
+            // Auto refresh
+            if (window._chatInterval) clearInterval(window._chatInterval);
+            window._chatInterval = setInterval(renderChatMessages, 3000);
+        }
+
+        function toggleChat() {
+            const panel = document.getElementById('matchChatPanel');
+            const toggle = document.getElementById('chatToggle');
+            panel.classList.toggle('active');
+            if (panel.classList.contains('active')) {
+                toggle.classList.add('hidden');
+                renderChatMessages();
+            } else {
+                if (currentChatMatchId) toggle.classList.remove('hidden');
+            }
+        }
+
+        function renderChatMessages() {
+            if (!currentChatMatchId) return;
+            const messages = MatchChat.getMessages(currentChatMatchId);
+            const container = document.getElementById('chatMessages');
+
+            container.innerHTML = messages.map(m => {
+                const isMe = m.senderId === user.id;
+                return `
+                    <div class="chat-msg ${isMe ? 'sent' : 'received'}">
+                        <div class="chat-msg-info">${isMe ? 'You' : m.senderName}</div>
+                        ${m.message}
+                    </div>
+                `;
+            }).join('');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chatInputField');
+            const text = input.value.trim();
+            if (!text || !currentChatMatchId) return;
+
+            MatchChat.sendMessage(currentChatMatchId, user.id, user.name, text);
+            input.value = '';
+            renderChatMessages();
+        }
+
         // Close modal on click outside
         document.getElementById('resultModal').addEventListener('click', function (e) {
             if (e.target === this) closeResultModal();
+        });
+
+        // Enter key for chat
+        document.getElementById('chatInputField').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') sendChatMessage();
         });
     </script>
 </body>

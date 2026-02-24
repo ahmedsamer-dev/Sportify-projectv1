@@ -100,6 +100,63 @@
                         </button>
                     </div>
 
+                    <div class="grid grid-2 gap-4">
+                        <div class="input-container">
+                            <i class="input-icon" style="font-style:normal; font-size:1.2rem; top:12px;">🎂</i>
+                            <input class="auth-input" type="number" id="age" placeholder="Age (Min 12)" min="12"
+                                required>
+                        </div>
+                        <div class="input-container">
+                            <i class="input-icon" style="font-style:normal; font-size:1.2rem; top:12px;">⭐</i>
+                            <select class="auth-input" id="sport" required title="Preferred Sport">
+                                <option value="football">Football</option>
+                                <option value="padel">Padel</option>
+                                <option value="basketball">Basketball</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-2 gap-4">
+                        <div class="input-container">
+                            <i class="input-icon" style="font-style:normal; font-size:1.2rem; top:12px;">🏙️</i>
+                            <select class="auth-input" id="governorate" required title="Governorate *">
+                                <option value="" disabled selected>Governorate *</option>
+                                <option value="Cairo">Cairo</option>
+                                <option value="Giza">Giza</option>
+                                <option value="Alexandria">Alexandria</option>
+                                <option value="Dakahlia">Dakahlia</option>
+                                <option value="Red Sea">Red Sea</option>
+                                <option value="Beheira">Beheira</option>
+                                <option value="Fayoum">Fayoum</option>
+                                <option value="Gharbia">Gharbia</option>
+                                <option value="Ismailia">Ismailia</option>
+                                <option value="Menofia">Menofia</option>
+                                <option value="Minya">Minya</option>
+                                <option value="Qalyubia">Qalyubia</option>
+                                <option value="New Valley">New Valley</option>
+                                <option value="Suez">Suez</option>
+                                <option value="Aswan">Aswan</option>
+                                <option value="Assiut">Assiut</option>
+                                <option value="Beni Suef">Beni Suef</option>
+                                <option value="Port Said">Port Said</option>
+                                <option value="Damietta">Damietta</option>
+                                <option value="Sharqia">Sharqia</option>
+                                <option value="South Sinai">South Sinai</option>
+                                <option value="Kafr El Sheikh">Kafr El Sheikh</option>
+                                <option value="Matrouh">Matrouh</option>
+                                <option value="Luxor">Luxor</option>
+                                <option value="Qena">Qena</option>
+                                <option value="North Sinai">North Sinai</option>
+                                <option value="Sohag">Sohag</option>
+                            </select>
+                        </div>
+                        <div class="input-container">
+                            <i class="input-icon" style="font-style:normal; font-size:1.2rem; top:12px;">📍</i>
+                            <input class="auth-input" type="text" id="street" placeholder="Street (Optional)"
+                                maxlength="100">
+                        </div>
+                    </div>
+
                     <div id="errorMsg" class="form-error-box mb-4" style="display:none;"></div>
 
                     <button type="submit" class="btn btn-primary btn-block btn-lg btn-auth-premium">
@@ -132,30 +189,47 @@
             pwd.type = pwd.type === 'password' ? 'text' : 'password';
         }
 
-        function handleRegister(e) {
+        async function handleRegister(e) {
             e.preventDefault();
-            const role = document.getElementById('role').value;
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
 
-            if (password.length < 6) {
-                showError("Password must be at least 6 characters.");
+            // Collect Data
+            const payload = {
+                role: document.getElementById('role').value,
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value,
+                age: document.getElementById('age').value,
+                governorate: document.getElementById('governorate').value,
+                city: document.getElementById('city').value,
+                preferredSport: document.getElementById('sport').value
+            };
+
+            // Basic Validation
+            if (!payload.name || !payload.email || payload.password.length < 6) {
+                showError("Please fill all required fields correctly.");
                 return;
             }
 
-            const result = Auth.register({
-                name,
-                email,
-                password,
-                role,
-                phone: '' // simplified for unified UI
-            });
+            try {
+                // UI Loading State
+                btn.disabled = true;
+                btn.innerHTML = `<span class="spinner"></span> Joining the League...`;
+                hideError();
 
-            if (result.success) {
-                window.location.href = 'profile.html';
-            } else {
-                showError(result.message);
+                const result = await Auth.register(payload);
+
+                if (result.success) {
+                    window.location.href = Auth.getRedirectUrl(result.user);
+                } else {
+                    showError(result.message);
+                }
+            } catch (err) {
+                showError("Connection lost. Please try again later.");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
             }
         }
 
@@ -163,6 +237,11 @@
             const err = document.getElementById('errorMsg');
             err.textContent = msg;
             err.style.display = 'block';
+            err.classList.add('animate-shake');
+        }
+
+        function hideError() {
+            document.getElementById('errorMsg').style.display = 'none';
         }
     </script>
 </body>

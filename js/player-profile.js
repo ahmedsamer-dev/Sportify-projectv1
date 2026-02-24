@@ -298,7 +298,16 @@ const PlayerLeaderboard = {
      * @param sportId - sport filter
      */
     getTopPlayers(metric = 'rating', limit = 10, sportId = 'football') {
-        const profiles = SportProfilesStore.filter(p => p.sportId === sportId);
+        const profiles = SportProfilesStore.filter(p => {
+            if (p.sportId !== sportId) return false;
+            // ROLE FILTER: Only PLAYER profiles are public
+            const user = UsersStore.getById(p.userId);
+            if (!user) return false;
+
+            // Comprehensive role check (SAFE)
+            const isPlayer = user.role === 'player' || (user.roles && user.roles.includes('player'));
+            return isPlayer;
+        });
 
         // Enrich with reliability if needed
         const enriched = profiles.map(p => {

@@ -9,10 +9,12 @@ const MatchmakingManager = {
     createRequest(data) {
         const user = Auth.getCurrentUser();
         if (!user) return { success: false, message: 'Login required' };
+        if (!Auth.hasRole('player')) return { success: false, message: 'Only players can create matches' };
 
         return {
             success: true,
             match: MatchRequestsStore.add({
+                hostId: user.id, // Architect requirement: Assign hostId
                 creatorId: user.id,
                 creatorName: user.name,
                 location: data.location || '',
@@ -20,7 +22,8 @@ const MatchmakingManager = {
                 timeSlot: data.timeSlot || '',
                 skillLevel: data.skillLevel || 'intermediate',
                 playersNeeded: parseInt(data.playersNeeded) || 4,
-                playersJoined: [{ userId: user.id, name: user.name }],
+                playersJoined: [{ userId: user.id, name: user.name, status: 'approved' }],
+                requests: [], // Architect Requirement: Part 3 approval logic
                 maxPlayers: parseInt(data.maxPlayers) || 10,
                 pitchType: data.pitchType || '5-a-side',
                 notes: data.notes || '',
@@ -31,24 +34,22 @@ const MatchmakingManager = {
         };
     },
 
-    /** Join an existing match request. */
+    /** Request to join a match (Players only). */
     joinMatch(matchId) {
         const user = Auth.getCurrentUser();
         if (!user) return { success: false, message: 'Login required' };
-
-        // Race guard
-        const lockKey = `match_join_${matchId}_${user.id}`;
-        if (!RaceGuard.acquire(lockKey, 1000)) {
-            return { success: false, message: 'Please wait...' };
-        }
+        if (!Auth.hasRole('player')) return { success: false, message: 'Only players can join matches' };
 
         const match = MatchRequestsStore.getById(matchId);
         if (!match) return { success: false, message: 'Match not found' };
         if (match.status !== 'open') return { success: false, message: 'Match is no longer open' };
 
-        // Already joined?
+        // Already joined or pending?
         if (match.playersJoined.some(p => p.userId === user.id)) {
             return { success: false, message: 'You already joined this match!' };
+        }
+        if (match.requests && match.requests.some(r => r.userId === user.id)) {
+            return { success: false, message: 'Your request is pending' };
         }
 
         // Full?
@@ -56,14 +57,54 @@ const MatchmakingManager = {
             return { success: false, message: 'Match is full' };
         }
 
-        match.playersJoined.push({ userId: user.id, name: user.name });
-        const newStatus = match.playersJoined.length >= match.maxPlayers ? 'full' : 'open';
+        const requests = match.requests || [];
+        requests.push({ userId: user.id, name: user.name, status: 'pending', requestedAt: new Date().toISOString() });
+
+        MatchRequestsStore.update(matchId, { requests });
+        return { success: true, message: 'Request sent to host' };
+    },
+
+    /** Handle Join Request (Host only). */
+    handleRequest(matchId, playerId, newStatus) {
+        const user = Auth.getCurrentUser();
+        const match = MatchRequestsStore.getById(matchId);
+        if (!match || match.hostId !== user.id) return { success: false, message: 'Unauthorized' };
+
+        const requests = (match.requests || []).filter(r => r.userId !== playerId);
+        const playerReq = (match.requests || []).find(r => r.userId === playerId);
+
+        if (!playerReq) return { success: false, message: 'Player request not found' };
+
+        if (newStatus === 'approved') {
+            if (match.playersJoined.length >= match.maxPlayers) return { success: false, message: 'Match is full' };
+            match.playersJoined.push({ userId: playerReq.userId, name: playerReq.name, status: 'approved' });
+        }
+
+        const newMatchStatus = match.playersJoined.length >= match.maxPlayers ? 'full' : 'open';
+
         MatchRequestsStore.update(matchId, {
+            requests,
             playersJoined: match.playersJoined,
-            status: newStatus
+            status: newMatchStatus
         });
 
-        return { success: true, isFull: newStatus === 'full' };
+        return { success: true };
+    },
+
+    /** Remove Player (Host only). */
+    removePlayer(matchId, playerId) {
+        const user = Auth.getCurrentUser();
+        const match = MatchRequestsStore.getById(matchId);
+        if (!match || match.hostId !== user.id) return { success: false, message: 'Unauthorized' };
+        if (playerId === match.hostId) return { success: false, message: 'Cannot remove yourself' };
+
+        const playersJoined = match.playersJoined.filter(p => p.userId !== playerId);
+        MatchRequestsStore.update(matchId, {
+            playersJoined,
+            status: 'open'
+        });
+
+        return { success: true };
     },
 
     /** Leave a match request. */
@@ -141,6 +182,11 @@ const MatchmakingManager = {
             resultStatus: 'pending'
         });
         return { success: true };
+    },
+
+    /** Get match by ID. */
+    getById(id) {
+        return MatchRequestsStore.getById(id);
     },
 
     /** Confirm a result (Participants only). */
