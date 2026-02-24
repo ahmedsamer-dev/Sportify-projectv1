@@ -299,6 +299,9 @@ function initPage(pageName) {
     `;
     document.head.appendChild(dropdownStyle);
 
+    // Initialize Premium UI System
+    PremiumUI.init();
+
   } catch (e) {
     console.error('SPORTIFY page init error:', e);
     const fallback = document.createElement('div');
@@ -307,3 +310,36 @@ function initPage(pageName) {
     document.body.prepend(fallback);
   }
 }
+
+/**
+ * SPORTIFY PREMIUM UI SYSTEM
+ * Automatically polishes hierarchy, spacing, and depth.
+ */
+const PremiumUI = {
+  init() {
+    this.stabilizeSpacing();
+    this.applyAtmosphericGlows();
+    this.enhanceIconMotion();
+  },
+
+  stabilizeSpacing() {
+    // Reset individual section padding-top overrides to allow global CSS system to take over
+    document.querySelectorAll('section[style*="padding-top:0"]').forEach(sec => {
+      sec.style.setProperty('padding-top', '', 'important');
+    });
+  },
+
+  applyAtmosphericGlows() {
+    // Apply modern depth layer to major content sections
+    document.querySelectorAll('section.main-content, section.hero, section.cta-banner').forEach(sec => {
+      sec.classList.add('section-glow');
+    });
+  },
+
+  enhanceIconMotion() {
+    // Apply dynamic kinetic motion to all identifying icons and avatars
+    document.querySelectorAll('.pillar-icon, .card-icon, .stat-icon, .coach-card-avatar, .feed-avatar, .nav-avatar').forEach(icon => {
+      icon.classList.add('icon-dynamic');
+    });
+  }
+};

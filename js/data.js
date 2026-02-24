@@ -185,13 +185,15 @@ const RankingManager = {
 // ⚠️ MVP: Passwords are stored in plain text. In production, use bcrypt hashing + server-side auth.
 const SEED_DATA = {
     users: [
+        { id: 'u_admin', name: 'Global Admin', email: 'admin@sportify.com', password: '123456', role: 'admin', roles: ['admin'], phone: '+20 100 000 0001', avatar: '', createdAt: '2026-01-01' },
+        { id: 'u_player', name: 'Demo Player', email: 'player@sportify.com', password: '123456', role: 'player', roles: ['player'], phone: '+20 100 000 0002', avatar: '', createdAt: '2026-01-05' },
+        { id: 'u_owner', name: 'Demo Owner', email: 'owner@sportify.com', password: '123456', role: 'pitch_owner', roles: ['pitch_owner'], phone: '+20 100 000 0004', avatar: '', createdAt: '2026-01-10' },
+        { id: 'u_coach', name: 'Demo Coach', email: 'coach@sportify.com', password: '123456', role: 'coach', roles: ['coach'], phone: '+20 100 000 0005', avatar: '', createdAt: '2026-01-12' },
         { id: 'u1', name: 'Admin', email: 'admin@admin.com', password: 'admin123', role: 'admin', roles: ['admin'], phone: '+20 100 000 0001', avatar: '', createdAt: '2026-01-01' },
         { id: 'u2', name: 'Ahmed Hassan', email: 'ahmed@mail.com', password: 'pass123', role: 'player', roles: ['player'], phone: '+20 100 000 0002', avatar: '', createdAt: '2026-01-05' },
         { id: 'u3', name: 'Sara El-Masry', email: 'sara@mail.com', password: 'pass123', role: 'player', roles: ['player'], phone: '+20 100 000 0003', avatar: '', createdAt: '2026-01-08' },
         { id: 'u4', name: 'Mohamed Ali', email: 'moh@pitch.com', password: 'pass123', role: 'pitch_owner', roles: ['pitch_owner'], phone: '+20 100 000 0004', avatar: '', createdAt: '2026-01-10' },
-        { id: 'u5', name: 'Karim Benzema', email: 'karim@coach.com', password: 'pass123', role: 'coach', roles: ['coach'], phone: '+20 100 000 0005', avatar: '', createdAt: '2026-01-12' },
-        { id: 'u6', name: 'Omar Fathy', email: 'omar@pitch.com', password: 'pass123', role: 'pitch_owner', roles: ['pitch_owner'], phone: '+20 100 000 0006', avatar: '', createdAt: '2026-01-15' },
-        { id: 'u7', name: 'Youssef Nabil', email: 'youssef@coach.com', password: 'pass123', role: 'coach', roles: ['coach'], phone: '+20 100 000 0007', avatar: '', createdAt: '2026-02-01' }
+        { id: 'u5', name: 'Karim Benzema', email: 'karim@coach.com', password: 'pass123', role: 'coach', roles: ['coach'], phone: '+20 100 000 0005', avatar: '', createdAt: '2026-01-12' }
     ],
     pitches: [
         { id: 'p1', name: 'Green Arena', location: 'Nasr City, Cairo', pricePerHour: 250, ownerId: 'u4', type: '5-a-side', capacity: 10, amenities: ['Lighting', 'Parking', 'Changing Room'], rating: 4.5, image: '' },
@@ -393,9 +395,28 @@ function seedDatabase(force = false) {
         DB.set('sportify_sport_profiles', SEED_DATA.sportProfiles);
         console.log('✅ Sport profiles seeded (upgrade)');
     }
-    // Ensure admin account always exists (safe upgrade for stale localStorage)
-    const allUsers = UsersStore.getAll();
-    const hasAdmin = allUsers.some(u => (u.roles && u.roles.includes('admin')) || u.role === 'admin');
+    // Ensure NEW demo accounts always exist (safe upgrade for existing users)
+    const currentUsers = UsersStore.getAll();
+    const demoEmails = ['admin@sportify.com', 'player@sportify.com', 'owner@sportify.com', 'coach@sportify.com'];
+    demoEmails.forEach((email, idx) => {
+        if (!currentUsers.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+            const roles = [['admin'], ['player'], ['pitch_owner'], ['coach']];
+            UsersStore.add({
+                id: `demo_u_${idx}`,
+                name: `Demo ${email.split('@')[0].toUpperCase()}`,
+                email: email,
+                password: '123456',
+                role: roles[idx][0],
+                roles: roles[idx],
+                phone: '+20 123 456 789',
+                createdAt: new Date().toISOString().split('T')[0]
+            });
+            console.log(`✅ Demo account injected: ${email}`);
+        }
+    });
+
+    // Ensure legacy admin account exists
+    const hasAdmin = currentUsers.some(u => (u.roles && u.roles.includes('admin')) || u.role === 'admin');
     if (!hasAdmin) {
         UsersStore.add({ id: 'u1', name: 'Admin', email: 'admin@admin.com', password: 'admin123', role: 'admin', roles: ['admin'], phone: '+20 100 000 0001', avatar: '', createdAt: '2026-01-01' });
         console.log('✅ Admin account injected (safe upgrade)');
