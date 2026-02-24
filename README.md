@@ -1,15 +1,15 @@
 <div align="center">
 
-# ⚽ SPORTIFY
+# 🏟️ SPORTIFY
 
-### The Modern Football Community Platform
+### The Modern Multi-Sport Community Platform
 
-Smart matchmaking • Player rankings • Academies • Tournaments • Social Football Experience
+Play • Train • Compete • Connect
 
 ![Status](https://img.shields.io/badge/status-active-brightgreen)
 ![Architecture](https://img.shields.io/badge/architecture-modular-blue)
-![Module](https://img.shields.io/badge/module-football-success)
 ![Platform](https://img.shields.io/badge/platform-web-orange)
+![Sports](https://img.shields.io/badge/multi--sport-ready-success)
 
 </div>
 
@@ -17,22 +17,24 @@ Smart matchmaking • Player rankings • Academies • Tournaments • Social F
 
 ## 🚀 Overview
 
-SPORTIFY is a modern football-focused web platform designed to connect players, pitch owners, and coaches in one unified sports ecosystem.
+SPORTIFY is a modern **multi-sport community platform** designed to connect players, pitch owners, and coaches within one scalable digital ecosystem.
 
-Unlike traditional booking systems, SPORTIFY transforms football into a **social and competitive digital experience**.
+Unlike traditional booking platforms, SPORTIFY focuses on building an interactive sports experience through smart matchmaking, performance tracking, academies, and competitive systems.
 
-> ⚽ Current Module: Football  
-> 🧩 Architecture: Multi-Sport Ready
+> 🧩 Multi-Sport Architecture  
+> ⚽ Current Active Module: Football
 
 ---
 
-## ✨ Core Experience
+## 🎯 Platform Vision
 
-<div align="center">
+SPORTIFY transforms sports from simple bookings into a structured community experience:
 
-🎯 Play • 👟 Train • 🏆 Compete • 📊 Track • ❤️ Engage
-
-</div>
+- Find players easily
+- Organize matches
+- Track performance
+- Manage academies
+- Compete through tournaments
 
 ---
 
@@ -43,66 +45,64 @@ Unlike traditional booking systems, SPORTIFY transforms football into a **social
 - Send pitch booking requests
 - Join tournaments
 - Enroll in academies
-- View performance stats & rankings
+- View rankings & performance stats
 
 ### 🏟 Pitch Owner
-- Manage pitches
+- Manage sports facilities
 - Approve booking requests
-- Visual availability management
+- Set availability visually
 - Create tournaments
-- View linked academy
+- View linked academies
 
 ### 👟 Coach / Academy Owner
 - Manage academy
 - Accept training requests
-- Internal competitions
-- Member chat system
+- Track players
+- Internal academy competitions
 
 ---
 
-## 🔥 Key Features
+## 🔥 Core Features
 
-### ⚽ Open Match Smart System
-Create matches instantly and allow nearby players to join until teams are full.
+### 🎯 Smart Matchmaking
+Create or join matches instantly with skill-based joining.
 
-### 📊 Player Profile & Rankings
-- Football stats tracking
-- Goals & match history
-- Dynamic rating system
+### 📊 Player Profiles & Rankings
+- Multi-sport profile architecture
+- Performance stats
 - Reliability score
 - Leaderboards
 
 ### 🏆 Tournament Engine
-- Created by pitch owners
-- Automated stats updates
+- Organized competitions
+- Automated stat tracking
 - Integrated ranking system
 
-### 🏫 Academy System
-- Coach-managed academies
-- Player tracking
+### 🏫 Academy Management
+- Coach-driven academies
 - Internal tournaments
+- Player engagement tools
 
-### ❤️ Social Feed
-- Like / Dislike toggle
-- Trending logic
-- Community interaction
+### ❤️ Social Community Feed
+- Like / Dislike reactions
+- Engagement-based trending
 
 ---
 
 ## 🧠 Architecture Highlights
 
-- Role-Based UX
-- Permission Matrix System
+- Multi-Sport Modular Design
+- Role-Based UX System
+- Permission Matrix Security
 - Race Condition Protection
-- Modular Feature Design
-- Multi-Sport Ready Structure
+- Scalable Data Structure
 
 ---
 
-## 🕒 Smart Availability Management
+## 🕒 Smart Availability System
 
-- Mouse-based time selection
-- Manual time slot option
+- Visual time-slot selection
+- Manual time input option
 - 12-hour AM/PM format
 - Conflict prevention logic
 
@@ -114,36 +114,34 @@ Subscription-based platform:
 
 ✅ Pitch Owners subscribe  
 ✅ Coaches subscribe  
-🆓 Players use platform free
+🆓 Players use platform for free
 
 Initial Subscription: **200 EGP**
 
 ---
 
-## 📈 Future Vision
+## 🌍 Future Sports Expansion
 
-- Multi-sport expansion
-- AI player matchmaking
-- Skill-based divisions
-- Advanced analytics
+Designed to support:
+
+- ⚽ Football (Current)
+- 🎾 Padel
+- 🏀 Basketball
+- 🏐 Volleyball
+- And more...
 
 ---
 
-## 🎯 Why SPORTIFY?
+## ⭐ Why SPORTIFY?
 
-Most platforms help you book a pitch.
+Most platforms focus on booking.
 
-SPORTIFY helps you:
-
-👉 Find players  
-👉 Build teams  
-👉 Track performance  
-👉 Grow as a football community
+SPORTIFY builds a **sports ecosystem**.
 
 ---
 
 <div align="center">
 
-### ⚽ Built with passion for football.
+### Built to redefine how people play sports together.
 
 </div>
