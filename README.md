@@ -4,7 +4,7 @@
 
 **SPORTIFY** (formerly Mal3abak) is a web-based digital sports community platform that connects **Players**, **Pitch Owners**, **Coaches**, and **Admins**. It provides football pitch booking, coach training sessions, academies, social feed, smart matchmaking, weekly goal competitions, and tournament management.
 
-> **🎓 Academic Graduation Project — MVP Version**
+> **🎓 Project — MVP Version**
 > **🏈 Multi-Sport Ready** — Currently running the Football module, architectured for Padel, Basketball, etc.
 
 ---
