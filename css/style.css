@@ -476,19 +476,19 @@ html {
 
 .auth-input {
     width: 100%;
-    padding: 14px 16px 14px 48px;
+    padding: 16px 18px 16px 48px;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--border-strong);
     border-radius: 8px;
     color: var(--text-h);
-    font-size: 0.95rem;
+    font-size: 1rem;
     transition: all var(--t-fast);
 }
 
 .auth-input:focus {
-    border-color: var(--primary);
-    background: rgba(0, 230, 118, 0.05);
-    box-shadow: 0 0 20px rgba(0, 230, 118, 0.1);
+    border-color: #00eaff;
+    background: rgba(0, 234, 255, 0.04);
+    box-shadow: 0 0 10px rgba(0, 234, 255, 0.3);
 }
 
 .auth-input:focus+.input-icon {
@@ -504,6 +504,11 @@ html {
     border: none;
     cursor: pointer;
     color: var(--text-faint);
+}
+
+.password-toggle-icon {
+    width: 20px;
+    height: 20px;
 }
 
 /* User Role Cards */
@@ -562,6 +567,8 @@ html {
 body {
     font-family: var(--font);
     background:
+        radial-gradient(circle at 20% 20%, rgba(0, 255, 156, 0.08), transparent),
+        radial-gradient(circle at 80% 40%, rgba(0, 234, 255, 0.05), transparent),
         radial-gradient(circle at 50% -20%, rgba(0, 230, 118, 0.2) 0%, transparent 60%),
         linear-gradient(180deg, rgba(7, 11, 20, 0.88) 0%, rgba(10, 15, 25, 0.98) 100%),
         url('https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=2000&auto=format&fit=crop');
@@ -811,20 +818,20 @@ h4 {
 
 .nav-links {
     display: flex;
-    gap: 2px;
+    gap: 4px;
     align-items: center;
 }
 
 .nav-links a {
-    padding: 8px 20px;
+    padding: 8px 18px;
     border-radius: var(--r-full);
-    color: rgba(255, 255, 255, 0.75);
-    font-weight: 500;
-    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 600;
+    font-size: 0.9rem;
     transition: all 0.25s ease;
     position: relative;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
 }
 
 .nav-links a::after {
@@ -842,8 +849,8 @@ h4 {
 }
 
 .nav-links a:hover {
-    color: #00FFC6;
-    text-shadow: 0 0 8px rgba(0, 255, 198, 0.6);
+    color: #00eaff;
+    text-shadow: 0 0 8px rgba(0, 234, 255, 0.5);
 }
 
 .nav-links a:hover::after {
@@ -851,8 +858,8 @@ h4 {
 }
 
 .nav-links a.active {
-    color: #00FFC6;
-    font-weight: 600;
+    color: #00eaff;
+    font-weight: 700;
 }
 
 .nav-links a.active::after {
@@ -863,6 +870,40 @@ h4 {
     display: flex;
     align-items: center;
     gap: var(--s-3);
+}
+
+/* Navbar Sign Up CTA Button */
+.nav-signup-btn {
+    padding: 10px 22px !important;
+    border-radius: 999px !important;
+    background: linear-gradient(90deg, #00ff9c, #00eaff) !important;
+    color: #0A0F19 !important;
+    font-weight: 800 !important;
+    font-size: 0.85rem !important;
+    box-shadow: 0 0 15px rgba(0, 255, 156, 0.4);
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border: none;
+}
+
+.nav-signup-btn:hover {
+    box-shadow: 0 0 25px rgba(0, 255, 156, 0.6), 0 0 50px rgba(0, 234, 255, 0.3);
+    transform: translateY(-2px) scale(1.03);
+    color: #0A0F19 !important;
+}
+
+/* Navbar Login Link */
+.nav-login-link {
+    color: rgba(255, 255, 255, 0.85) !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    transition: all 0.25s ease;
+}
+
+.nav-login-link:hover {
+    color: #00eaff !important;
+    text-shadow: 0 0 8px rgba(0, 234, 255, 0.5);
 }
 
 .nav-avatar {

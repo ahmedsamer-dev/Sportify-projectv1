@@ -324,6 +324,202 @@
             pointer-events: none;
         }
 
+        /* ---- Sport Category Cards ---- */
+        .sport-categories {
+            padding: 0 0 var(--s-10);
+        }
+
+        .sport-categories .section-header {
+            margin-bottom: var(--s-8);
+        }
+
+        .sport-cat-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--s-5);
+        }
+
+        .sport-cat-card {
+            position: relative;
+            height: 240px;
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: var(--s-6) var(--s-7);
+        }
+
+        .sport-cat-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        /* Football card */
+        .sport-cat-card[data-sport="football"] {
+            background:
+                linear-gradient(180deg, rgba(10, 15, 25, 0.3) 0%, rgba(10, 15, 25, 0.85) 100%),
+                linear-gradient(135deg, #0d4f1c 0%, #1a3a2a 40%, #0a1f15 100%);
+        }
+
+        .sport-cat-card[data-sport="football"]::before {
+            background:
+                radial-gradient(ellipse at 30% 20%, rgba(0, 255, 156, 0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 80%, rgba(0, 230, 118, 0.1) 0%, transparent 50%);
+        }
+
+        .sport-cat-card[data-sport="football"]:hover,
+        .sport-cat-card[data-sport="football"].active {
+            border-color: #00ff9c;
+            box-shadow: 0 0 30px rgba(0, 255, 156, 0.25), 0 8px 40px rgba(0, 255, 156, 0.1);
+        }
+
+        .sport-cat-card[data-sport="football"] .sport-cat-accent {
+            color: #00ff9c;
+        }
+
+        /* Padel card */
+        .sport-cat-card[data-sport="padel"] {
+            background:
+                linear-gradient(180deg, rgba(10, 15, 25, 0.3) 0%, rgba(10, 15, 25, 0.85) 100%),
+                linear-gradient(135deg, #0a2d4f 0%, #0f2a3d 40%, #081a2a 100%);
+        }
+
+        .sport-cat-card[data-sport="padel"]::before {
+            background:
+                radial-gradient(ellipse at 30% 20%, rgba(0, 234, 255, 0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 80%, rgba(0, 176, 255, 0.1) 0%, transparent 50%);
+        }
+
+        .sport-cat-card[data-sport="padel"]:hover,
+        .sport-cat-card[data-sport="padel"].active {
+            border-color: #00eaff;
+            box-shadow: 0 0 30px rgba(0, 234, 255, 0.25), 0 8px 40px rgba(0, 234, 255, 0.1);
+        }
+
+        .sport-cat-card[data-sport="padel"] .sport-cat-accent {
+            color: #00eaff;
+        }
+
+        /* Basketball card */
+        .sport-cat-card[data-sport="basketball"] {
+            background:
+                linear-gradient(180deg, rgba(10, 15, 25, 0.3) 0%, rgba(10, 15, 25, 0.85) 100%),
+                linear-gradient(135deg, #4a2000 0%, #3a1a0a 40%, #1a0d05 100%);
+        }
+
+        .sport-cat-card[data-sport="basketball"]::before {
+            background:
+                radial-gradient(ellipse at 30% 20%, rgba(255, 165, 0, 0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 80%, rgba(255, 120, 0, 0.1) 0%, transparent 50%);
+        }
+
+        .sport-cat-card[data-sport="basketball"]:hover,
+        .sport-cat-card[data-sport="basketball"].active {
+            border-color: #ffa500;
+            box-shadow: 0 0 30px rgba(255, 165, 0, 0.25), 0 8px 40px rgba(255, 165, 0, 0.1);
+        }
+
+        .sport-cat-card[data-sport="basketball"] .sport-cat-accent {
+            color: #ffa500;
+        }
+
+        .sport-cat-card:hover {
+            transform: scale(1.03);
+        }
+
+        .sport-cat-card.active {
+            transform: scale(1.03);
+        }
+
+        .sport-cat-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .sport-cat-icon {
+            font-size: 2.8rem;
+            margin-bottom: var(--s-3);
+            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
+            line-height: 1;
+        }
+
+        .sport-cat-name {
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: var(--text-h);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 4px;
+        }
+
+        .sport-cat-sub {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.4;
+        }
+
+        .sport-cat-check {
+            position: absolute;
+            top: var(--s-4);
+            right: var(--s-4);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            z-index: 3;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: scale(0.5);
+        }
+
+        .sport-cat-card.active .sport-cat-check {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .sport-cat-card[data-sport="football"].active .sport-cat-check {
+            border-color: #00ff9c;
+            background: #00ff9c;
+            color: #0A0F19;
+        }
+
+        .sport-cat-card[data-sport="padel"].active .sport-cat-check {
+            border-color: #00eaff;
+            background: #00eaff;
+            color: #0A0F19;
+        }
+
+        .sport-cat-card[data-sport="basketball"].active .sport-cat-check {
+            border-color: #ffa500;
+            background: #ffa500;
+            color: #0A0F19;
+        }
+
+        .sport-filter-note {
+            text-align: center;
+            margin-top: var(--s-4);
+            font-size: 0.82rem;
+            color: var(--text-faint);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sport-filter-note.visible {
+            opacity: 1;
+        }
+
         @media (max-width: 768px) {
             .hero {
                 min-height: 0;
@@ -331,6 +527,14 @@
 
             .pillars-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .sport-cat-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .sport-cat-card {
+                height: 180px;
             }
 
             .hero h1 {
@@ -390,6 +594,47 @@
                         <div class="lbl">Tournaments</div>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <!-- Sport Categories -->
+        <section class="main-content sport-categories" id="sportCategories">
+            <div class="container">
+                <div class="section-header text-center animate-in">
+                    <div class="section-badge">🏅 CHOOSE YOUR SPORT</div>
+                    <h2>Pick Your Arena</h2>
+                    <p>Select a sport to see relevant pitches, matches, and coaches</p>
+                </div>
+                <div class="sport-cat-grid">
+                    <div class="sport-cat-card animate-in" data-sport="football" onclick="selectHomeSport(this)">
+                        <div class="sport-cat-check">✓</div>
+                        <div class="sport-cat-content">
+                            <div class="sport-cat-icon">⚽</div>
+                            <div class="sport-cat-name">Football</div>
+                            <div class="sport-cat-sub">Book pitches & join matches</div>
+                        </div>
+                    </div>
+                    <div class="sport-cat-card animate-in animate-delay-1" data-sport="padel"
+                        onclick="selectHomeSport(this)">
+                        <div class="sport-cat-check">✓</div>
+                        <div class="sport-cat-content">
+                            <div class="sport-cat-icon">🎾</div>
+                            <div class="sport-cat-name">Padel</div>
+                            <div class="sport-cat-sub">Reserve courts & find partners</div>
+                        </div>
+                    </div>
+                    <div class="sport-cat-card animate-in animate-delay-2" data-sport="basketball"
+                        onclick="selectHomeSport(this)">
+                        <div class="sport-cat-check">✓</div>
+                        <div class="sport-cat-content">
+                            <div class="sport-cat-icon">🏀</div>
+                            <div class="sport-cat-name">Basketball</div>
+                            <div class="sport-cat-sub">Shoot hoops & compete in leagues</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="sport-filter-note" id="sportFilterNote">Showing <strong id="sportFilterLabel">all</strong>
+                    content</div>
             </div>
         </section>
 
@@ -500,93 +745,182 @@
     <script>
         initPage('home');
 
-        // ---- Open Matches ----
-        const matchStore = typeof MatchRequestsStore !== 'undefined' ? MatchRequestsStore : null;
-        const openMatches = matchStore
-            ? matchStore.filter(m => m.status === 'open').slice(0, 3)
-            : [];
+        // ---- Sport Category Selection ----
+        let selectedHomeSport = '';
 
-        // Update hero counter
-        const matchCountEl = document.getElementById('openMatchCount');
-        if (matchCountEl) {
-            matchCountEl.textContent = openMatches.length;
-            matchCountEl.dataset.count = openMatches.length;
-        }
-
-        if (openMatches.length > 0) {
-            document.getElementById('openMatches').innerHTML = openMatches.map(m => {
-                const creator = getUserById(m.creatorId);
-                const currentPlayers = m.joinedPlayers ? m.joinedPlayers.length : 0;
-                const maxPlayers = m.maxPlayers || 10;
-                const spotsLeft = maxPlayers - currentPlayers;
-                const pct = Math.round((currentPlayers / maxPlayers) * 100);
-                const urgency = spotsLeft <= 3;
-
-                // Player dots
-                let dots = '';
-                for (let i = 0; i < maxPlayers && i < 10; i++) {
-                    dots += i < currentPlayers
-                        ? `<div class="player-dot filled">${i + 1}</div>`
-                        : `<div class="player-dot empty">?</div>`;
+        // Auto-highlight user's preferred sport
+        (function initSportHighlight() {
+            const user = Auth.isLoggedIn() ? Auth.getCurrentUser() : null;
+            if (user && user.preferredSport) {
+                const card = document.querySelector(`.sport-cat-card[data-sport="${user.preferredSport}"]`);
+                if (card) {
+                    card.classList.add('active');
+                    selectedHomeSport = user.preferredSport;
+                    updateFilterNote(user.preferredSport);
                 }
+            }
+        })();
 
-                return `
-                <div class="match-card animate-in">
-                    <div class="match-header">
-                        <div>
-                            <div class="match-title">${m.location || 'Open Match'}</div>
-                            <div class="text-xs text-faint" style="margin-top:2px;">${creator ? creator.name : 'Unknown'}</div>
-                        </div>
-                        ${urgency ? '<span class="badge badge-live">🔥 ' + spotsLeft + ' spots left</span>' : `<span class="badge badge-primary">${spotsLeft} spots</span>`}
-                    </div>
-                    <div class="match-meta">
-                        <span>📅 ${formatDate(m.date || m.createdAt)}</span>
-                        <span>⏰ ${m.time || '—'}</span>
-                        <span>🎯 ${m.skillLevel || 'Any'}</span>
-                    </div>
-                    <div class="player-dots">${dots}</div>
-                    <div class="match-progress">
-                        <div class="match-progress-fill" style="width:${pct}%"></div>
-                    </div>
-                    <div class="flex-between">
-                        <span class="text-xs text-faint">${currentPlayers}/${maxPlayers} players</span>
-                        <a href="matchmaking.html" class="btn btn-primary btn-sm">Join Match</a>
-                    </div>
-                </div>`;
-            }).join('');
-        } else {
-            document.getElementById('openMatches').innerHTML = `
-                <div class="match-card text-center animate-in" style="grid-column:1/-1;padding:var(--s-12);">
-                    <div style="font-size:2.5rem;margin-bottom:var(--s-4);">⚽</div>
-                    <h3 style="margin-bottom:var(--s-2);">No Open Matches Yet</h3>
-                    <p class="text-faint text-sm">Be the first to create a match and find teammates!</p>
-                    <a href="matchmaking.html" class="btn btn-primary btn-sm" style="margin-top:var(--s-5);">Create Match</a>
-                </div>`;
+        function selectHomeSport(el) {
+            const sport = el.dataset.sport;
+
+            // Toggle: if already selected, deselect (show all)
+            if (selectedHomeSport === sport) {
+                el.classList.remove('active');
+                selectedHomeSport = '';
+                updateFilterNote('');
+                renderFilteredContent('');
+                return;
+            }
+
+            // Deselect previous
+            document.querySelectorAll('.sport-cat-card').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            selectedHomeSport = sport;
+
+            updateFilterNote(sport);
+            renderFilteredContent(sport);
+
+            // Smooth scroll to content
+            const pillars = document.querySelector('.pillars-grid');
+            if (pillars) pillars.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
-        // ---- Top Pitches ----
-        const pitches = PitchesStore.getAll().sort((a, b) => b.rating - a.rating).slice(0, 3);
-        document.getElementById('topPitches').innerHTML = pitches.map(p => `
-            <div class="card animate-in">
-                <div class="pitch-img-placeholder">⚽</div>
-                <div class="card-header">
-                    <div>
-                        <div class="card-title">${p.name}</div>
-                        <div class="card-subtitle">📍 ${p.location}</div>
-                    </div>
-                    <span class="badge badge-primary">${p.type}</span>
-                </div>
-                <div class="pitch-meta">
-                    <span class="pitch-rating">${getStarRating(p.rating)}</span>
-                    <span class="text-sm text-faint">${p.rating}</span>
-                    <span class="badge badge-neutral" style="margin-left:auto;">${p.capacity} players</span>
-                </div>
-                <div class="card-footer">
-                    <span class="price">${p.pricePerHour} EGP<span class="text-xs text-faint" style="font-weight:400;"> /hr</span></span>
-                    <a href="booking.html?pitch=${p.id}" class="btn btn-primary btn-sm">Book Now</a>
-                </div>
-            </div>
-        `).join('');
+        function updateFilterNote(sport) {
+            const note = document.getElementById('sportFilterNote');
+            const label = document.getElementById('sportFilterLabel');
+            if (sport) {
+                label.textContent = sport.charAt(0).toUpperCase() + sport.slice(1);
+                note.classList.add('visible');
+            } else {
+                label.textContent = 'all';
+                note.classList.remove('visible');
+            }
+        }
+
+        function renderFilteredContent(sport) {
+            renderPitches(sport);
+            renderMatches(sport);
+        }
+
+        // ---- Render Matches (sport-aware) ----
+        function renderMatches(sportFilter) {
+            const matchStore = typeof MatchRequestsStore !== 'undefined' ? MatchRequestsStore : null;
+            let openMatches = matchStore
+                ? matchStore.filter(m => m.status === 'open')
+                : [];
+
+            // Filter by sport if selected
+            if (sportFilter) {
+                openMatches = openMatches.filter(m => (m.sport || 'football') === sportFilter);
+            }
+            openMatches = openMatches.slice(0, 3);
+
+            // Update hero counter
+            const matchCountEl = document.getElementById('openMatchCount');
+            if (matchCountEl) {
+                matchCountEl.textContent = openMatches.length;
+                matchCountEl.dataset.count = openMatches.length;
+            }
+
+            if (openMatches.length > 0) {
+                document.getElementById('openMatches').innerHTML = openMatches.map(m => {
+                    const creator = getUserById(m.creatorId);
+                    const currentPlayers = m.joinedPlayers ? m.joinedPlayers.length : 0;
+                    const maxPlayers = m.maxPlayers || 10;
+                    const spotsLeft = maxPlayers - currentPlayers;
+                    const pct = Math.round((currentPlayers / maxPlayers) * 100);
+                    const urgency = spotsLeft <= 3;
+
+                    let dots = '';
+                    for (let i = 0; i < maxPlayers && i < 10; i++) {
+                        dots += i < currentPlayers
+                            ? `<div class="player-dot filled">${i + 1}</div>`
+                            : `<div class="player-dot empty">?</div>`;
+                    }
+
+                    return `
+                    <div class="match-card animate-in">
+                        <div class="match-header">
+                            <div>
+                                <div class="match-title">${m.location || 'Open Match'}</div>
+                                <div class="text-xs text-faint" style="margin-top:2px;">${creator ? creator.name : 'Unknown'}</div>
+                            </div>
+                            ${urgency ? '<span class="badge badge-live">🔥 ' + spotsLeft + ' spots left</span>' : `<span class="badge badge-primary">${spotsLeft} spots</span>`}
+                        </div>
+                        <div class="match-meta">
+                            <span>📅 ${formatDate(m.date || m.createdAt)}</span>
+                            <span>⏰ ${m.time || '—'}</span>
+                            <span>🎯 ${m.skillLevel || 'Any'}</span>
+                        </div>
+                        <div class="player-dots">${dots}</div>
+                        <div class="match-progress">
+                            <div class="match-progress-fill" style="width:${pct}%"></div>
+                        </div>
+                        <div class="flex-between">
+                            <span class="text-xs text-faint">${currentPlayers}/${maxPlayers} players</span>
+                            <a href="matchmaking.html" class="btn btn-primary btn-sm">Join Match</a>
+                        </div>
+                    </div>`;
+                }).join('');
+            } else {
+                const sportIcon = sportFilter === 'basketball' ? '🏀' : sportFilter === 'padel' ? '🎾' : '⚽';
+                document.getElementById('openMatches').innerHTML = `
+                    <div class="match-card text-center animate-in" style="grid-column:1/-1;padding:var(--s-12);">
+                        <div style="font-size:2.5rem;margin-bottom:var(--s-4);">${sportIcon}</div>
+                        <h3 style="margin-bottom:var(--s-2);">No Open Matches${sportFilter ? ' for ' + sportFilter.charAt(0).toUpperCase() + sportFilter.slice(1) : ''}</h3>
+                        <p class="text-faint text-sm">Be the first to create a match and find teammates!</p>
+                        <a href="matchmaking.html" class="btn btn-primary btn-sm" style="margin-top:var(--s-5);">Create Match</a>
+                    </div>`;
+            }
+        }
+
+        // ---- Render Pitches (sport-aware) ----
+        function renderPitches(sportFilter) {
+            let pitches = PitchesStore.getAll().sort((a, b) => b.rating - a.rating);
+
+            // Filter by sport if selected
+            if (sportFilter) {
+                pitches = pitches.filter(p => (p.sport || 'football') === sportFilter);
+            }
+            pitches = pitches.slice(0, 3);
+
+            if (pitches.length > 0) {
+                document.getElementById('topPitches').innerHTML = pitches.map(p => {
+                    const sportIcon = (p.sport || 'football') === 'basketball' ? '🏀' : (p.sport || 'football') === 'padel' ? '🎾' : '⚽';
+                    return `
+                    <div class="card animate-in">
+                        <div class="pitch-img-placeholder">${sportIcon}</div>
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">${p.name}</div>
+                                <div class="card-subtitle">📍 ${p.location}</div>
+                            </div>
+                            <span class="badge badge-primary">${p.type}</span>
+                        </div>
+                        <div class="pitch-meta">
+                            <span class="pitch-rating">${getStarRating(p.rating)}</span>
+                            <span class="text-sm text-faint">${p.rating}</span>
+                            <span class="badge badge-neutral" style="margin-left:auto;">${p.capacity} players</span>
+                        </div>
+                        <div class="card-footer">
+                            <span class="price">${p.pricePerHour} EGP<span class="text-xs text-faint" style="font-weight:400;"> /hr</span></span>
+                            <a href="booking.html?pitch=${p.id}" class="btn btn-primary btn-sm">Book Now</a>
+                        </div>
+                    </div>`;
+                }).join('');
+            } else {
+                document.getElementById('topPitches').innerHTML = `
+                    <div class="card text-center animate-in" style="grid-column:1/-1;padding:var(--s-12);">
+                        <p class="text-faint">No pitches available${sportFilter ? ' for ' + sportFilter.charAt(0).toUpperCase() + sportFilter.slice(1) : ''} yet.</p>
+                        <a href="pitches.html" class="btn btn-outline btn-sm" style="margin-top:var(--s-4);">Browse All Pitches</a>
+                    </div>`;
+            }
+        }
+
+        // ---- Initial render ----
+        renderMatches(selectedHomeSport);
+        renderPitches(selectedHomeSport);
     </script>
 </body>
 

@@ -72,11 +72,20 @@
                     <div class="filter-bar">
                         <input class="form-input" type="text" id="searchInput" placeholder="Search pitches..."
                             style="flex:1;min-width:180px;" oninput="filterPitches()">
+                        <select class="form-select" id="sportFilter" onchange="filterPitches()">
+                            <option value="">All Sports</option>
+                            <option value="football">Football</option>
+                            <option value="padel">Padel</option>
+                            <option value="basketball">Basketball</option>
+                        </select>
                         <select class="form-select" id="typeFilter" onchange="filterPitches()">
-                            <option value="">All Types</option>
+                            <option value="">All Types/Sizes</option>
                             <option value="5-a-side">5-a-side</option>
                             <option value="7-a-side">7-a-side</option>
                             <option value="11-a-side">11-a-side</option>
+                            <option value="Outdoor">Outdoor Court</option>
+                            <option value="Indoor">Indoor Court</option>
+                            <option value="Full Court">Full Court</option>
                         </select>
                         <select class="form-select" id="sortFilter" onchange="filterPitches()">
                             <option value="rating">Top Rated</option>
@@ -100,13 +109,22 @@
     <script>
         initPage('pitches');
 
+        // Check for sport in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('sport')) {
+            document.getElementById('sportFilter').value = urlParams.get('sport');
+        }
+
         function filterPitches() {
             const search = document.getElementById('searchInput').value.toLowerCase();
+            const sport = document.getElementById('sportFilter').value;
             const type = document.getElementById('typeFilter').value;
             const sort = document.getElementById('sortFilter').value;
 
             let pitches = PitchesStore.getAll();
+
             if (search) pitches = pitches.filter(p => p.name.toLowerCase().includes(search) || p.location.toLowerCase().includes(search));
+            if (sport) pitches = pitches.filter(p => (p.sport || 'football') === sport);
             if (type) pitches = pitches.filter(p => p.type === type);
 
             if (sort === 'rating') pitches.sort((a, b) => b.rating - a.rating);
@@ -118,9 +136,10 @@
                 ? '<div class="card text-center" style="grid-column:1/-1;padding:var(--s-16);"><p class="text-faint">No pitches match your criteria</p></div>'
                 : pitches.map(p => {
                     const owner = getUserById(p.ownerId);
+                    const sportIcon = (p.sport || 'football') === 'basketball' ? '🏀' : (p.sport || 'football') === 'padel' ? '🎾' : '⚽';
                     return `
           <div class="card animate-in">
-            <div class="pitch-img">⚽</div>
+            <div class="pitch-img">${sportIcon}</div>
             <div class="card-header">
               <div>
                 <div class="card-title">${p.name}</div>

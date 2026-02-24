@@ -354,10 +354,19 @@
                 <div class="filter-bar" id="filterBar">
                     <input class="form-input" type="text" id="searchInput" placeholder="Search academies..."
                         oninput="renderAcademies()">
-                    <select class="form-select" id="filterCategory" onchange="renderAcademies()">
+                    <select class="form-select" id="filterSport" onchange="renderAcademies()"
+                        aria-label="Filter by Sport">
+                        <option value="">All Sports</option>
+                        <option value="football">Football</option>
+                        <option value="padel">Padel</option>
+                        <option value="basketball">Basketball</option>
+                    </select>
+                    <select class="form-select" id="filterCategory" onchange="renderAcademies()"
+                        aria-label="Filter by Category">
                         <option value="">All Categories</option>
                     </select>
-                    <select class="form-select" id="filterLevel" onchange="renderAcademies()">
+                    <select class="form-select" id="filterLevel" onchange="renderAcademies()"
+                        aria-label="Filter by Level">
                         <option value="">All Levels</option>
                         <option value="Beginner">Beginner</option>
                         <option value="Intermediate">Intermediate</option>
@@ -392,6 +401,12 @@
         const isCoach = user && user.role === 'coach';
         const isPlayer = user && user.role === 'player';
 
+        // Check for sport in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('sport')) {
+            document.getElementById('filterSport').value = urlParams.get('sport');
+        }
+
         // Hero actions
         const heroActionsEl = document.getElementById('heroActions');
         if (isCoach) {
@@ -407,8 +422,6 @@
         const allEnrollments = AcademyEnrollmentsStore.getAll();
         const activeAcademies = allAcademies.filter(a => ['active', 'approved'].includes(a.status));
         const uniqueCoaches = [...new Set(allAcademies.map(a => a.coachUserId))];
-
-        console.log("Academies data:", allAcademies);
 
         document.getElementById('academyStats').innerHTML = `
             <div class="stat-card animate-in"><div class="stat-value">${activeAcademies.length}</div><div class="stat-label">Active Academies</div></div>
@@ -429,11 +442,13 @@
         // ---- Render academies ----
         function renderAcademies() {
             const search = document.getElementById('searchInput').value.toLowerCase();
+            const sport = document.getElementById('filterSport').value;
             const cat = document.getElementById('filterCategory').value;
             const level = document.getElementById('filterLevel').value;
 
             let filtered = allAcademies.filter(a => {
                 if (search && !a.name.toLowerCase().includes(search) && !a.description.toLowerCase().includes(search) && !a.category.toLowerCase().includes(search)) return false;
+                if (sport && (a.sport || 'football') !== sport) return false;
                 if (cat && a.category !== cat) return false;
                 if (level && a.level !== level) return false;
                 return true;
@@ -460,7 +475,7 @@
                 return `
                 <div class="card academy-card animate-in">
                     <div class="academy-card-header">
-                        <div class="academy-icon">${getCategoryIcon(academy.category)}</div>
+                        <div class="academy-icon">${getCategoryIcon(academy.category, academy.sport)}</div>
                         <div style="flex:1;min-width:0;">
                             <div class="card-title">${academy.name}</div>
                             <div class="card-subtitle">
@@ -510,7 +525,10 @@
             }).join('');
         }
 
-        function getCategoryIcon(category) {
+        function getCategoryIcon(category, sport = 'football') {
+            if (sport === 'padel') return '🎾';
+            if (sport === 'basketball') return '🏀';
+
             const icons = {
                 'Attack & Finishing': '⚡',
                 'Fitness & Conditioning': '💪',

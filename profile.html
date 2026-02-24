@@ -941,6 +941,33 @@
       </div>
     </div> `;
 
+    // ======= ADDRESS UPDATE SECTION (for own profile only) =======
+    if (isMe) {
+      html += `
+      <div class="section-card animate-in animate-delay-3">
+        <h3>📍 Update Address</h3>
+        <p class="text-faint text-sm" style="margin-bottom:var(--s-4);">Keep your location updated for nearby pitches and tournaments.</p>
+        <form id="addressForm" onsubmit="saveAddress(event)">
+          <div class="grid grid-2 gap-4">
+            <div class="input-container" style="margin-bottom:0;">
+              <select class="auth-input" id="profileGovernorate" title="Governorate">
+                <option value="" disabled ${!user.governorate ? 'selected' : ''}>Select Governorate</option>
+                ${['Cairo', 'Giza', 'Alexandria', 'Dakahlia', 'Red Sea', 'Beheira', 'Fayoum', 'Gharbia', 'Ismailia', 'Menofia', 'Minya', 'Qalyubia', 'New Valley', 'Suez', 'Aswan', 'Assiut', 'Beni Suef', 'Port Said', 'Damietta', 'Sharqia', 'South Sinai', 'Kafr El Sheikh', 'Matrouh', 'Luxor', 'Qena', 'North Sinai', 'Sohag']
+          .map(g => `<option value="${g}" ${user.governorate === g ? 'selected' : ''}>${g}</option>`).join('')}
+              </select>
+            </div>
+            <div class="input-container" style="margin-bottom:0;">
+              <input class="auth-input" type="text" id="profileStreet" placeholder="Street (Optional)" maxlength="100" value="${user.street || ''}">
+            </div>
+          </div>
+          <div style="margin-top:var(--s-4);display:flex;align-items:center;gap:var(--s-3);">
+            <button type="submit" class="btn btn-primary btn-sm" id="saveAddressBtn">Save Address</button>
+            <span id="addressMsg" class="text-sm" style="display:none;color:var(--primary);font-weight:600;"></span>
+          </div>
+        </form>
+      </div>`;
+    }
+
     // ======= BOOKINGS TABLE (existing, preserved) =======
     html += `
       <div class="section-card animate-in animate-delay-3">
@@ -1000,6 +1027,30 @@
     }
 
     document.getElementById('profileContent').innerHTML = html;
+
+    // --- Address form handler ---
+    function saveAddress(e) {
+      e.preventDefault();
+      const governorate = document.getElementById('profileGovernorate').value;
+      const street = document.getElementById('profileStreet').value.trim();
+
+      if (!governorate) {
+        alert('Please select a governorate.');
+        return;
+      }
+
+      // Update session and user store
+      Auth.updateSession({ governorate, street });
+
+      // Show success message
+      const msg = document.getElementById('addressMsg');
+      msg.textContent = '✅ Address updated!';
+      msg.style.display = 'inline';
+      setTimeout(() => { msg.style.display = 'none'; }, 3000);
+    }
+
+    // Expose to global scope for inline onsubmit
+    window.saveAddress = saveAddress;
   </script>
 </body>
 

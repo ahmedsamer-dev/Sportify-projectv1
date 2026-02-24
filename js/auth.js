@@ -19,7 +19,8 @@ const Auth = {
     },
 
     // Simulated API call for Login
-    async login(email, password) {
+    // requiredRole: optional - if set, only that role can log in (for /coach-login, /owner-login, /admin-login)
+    async login(email, password, requiredRole = null) {
         // Validation
         if (!email || !password) return { success: false, message: 'Please enter all fields.' };
 
@@ -30,6 +31,11 @@ const Auth = {
         const user = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
 
         if (!user) return { success: false, message: 'Invalid email or password. Please try again.' };
+
+        // Role gate: if a specific role is required, enforce it
+        if (requiredRole && user.role !== requiredRole) {
+            return { success: false, message: `This login page is for ${requiredRole} accounts only.` };
+        }
 
         const session = { ...user };
         delete session.password;
@@ -45,14 +51,13 @@ const Auth = {
         return { success: true, user: session, token };
     },
 
-    // Registration (Extended payload)
+    // Registration (simplified minimal payload)
     async register(payload) {
-        const { name, email, password, role, age, governorate, city, preferredSport, phone } = payload;
+        const { name, email, password } = payload;
 
         // Validation
-        if (!name || !email || !password || !role) return { success: false, message: 'Missing required account info.' };
+        if (!name || !email || !password) return { success: false, message: 'Please fill in all fields.' };
         if (password.length < 6) return { success: false, message: 'Password must be at least 6 characters.' };
-        if (age && parseInt(age) < 12) return { success: false, message: 'Minimum age required is 12 years.' };
 
         // Simulate network delay
         await new Promise(r => setTimeout(r, 1000));
@@ -67,30 +72,18 @@ const Auth = {
             name,
             email,
             password,
-            role,                 // Legacy primary role
-            roles: [role],        // Multi-role array
-            age: parseInt(age) || null,
-            governorate: governorate || '',
-            city: city || '',
-            preferredSport: preferredSport || 'football',
-            phone: phone || '',
+            role: 'player',
+            roles: ['player'],
+            age: null,
+            governorate: '',
+            street: '',
+            preferredSport: '',   // Empty = needs onboarding
+            phone: '',
             avatar: '',
             createdAt: new Date().toISOString().split('T')[0]
         };
 
         UsersStore.add(newUser);
-
-        // If coach, initialize profile
-        if (role === 'coach') {
-            CoachesStore.add({
-                userId: newUser.id,
-                specialty: 'General',
-                experience: 0,
-                hourlyRate: 100,
-                rating: 0,
-                bio: 'Professional coach on SPORTIFY'
-            });
-        }
 
         const session = { ...newUser };
         delete session.password;
@@ -101,6 +94,31 @@ const Auth = {
         DB.setOne(this.SESSION_KEY, session);
 
         return { success: true, user: session, token };
+    },
+
+    // Check if user needs sport onboarding
+    needsOnboarding() {
+        const user = this.getCurrentUser();
+        if (!user) return false;
+        return !user.preferredSport;
+    },
+
+    // Update current user data in session
+    updateSession(updates) {
+        const user = this.getCurrentUser();
+        if (!user) return;
+        const updated = { ...user, ...updates };
+        DB.setOne(this.SESSION_KEY, updated);
+
+        // Also update in UsersStore
+        const users = UsersStore.getAll();
+        const idx = users.findIndex(u => u.id === user.id);
+        if (idx !== -1) {
+            const fullUser = users[idx];
+            Object.assign(fullUser, updates);
+            localStorage.setItem('mal3abak_users', JSON.stringify(users));
+        }
+        return updated;
     },
 
     // Logout
@@ -120,6 +138,8 @@ const Auth = {
     // Redirect to proper dashboard
     getRedirectUrl(user) {
         if (!user) return 'login.html';
+        // Check if user needs sport onboarding
+        if (!user.preferredSport) return 'onboarding.html';
         if (user.role === 'admin') return 'admin.html';
         if (user.role === 'coach') return 'coach-dashboard.html';
         if (user.role === 'pitch_owner') return 'pitch-owner-dashboard.html';

@@ -63,8 +63,8 @@ function buildNavbar(activePage = '') {
          <button class="btn btn-sm btn-ghost" onclick="Auth.logout()" style="border-radius:var(--r-full);">Log out</button>
        </div>`
     : `<div class="nav-user">
-         <a href="login.html" class="btn btn-sm btn-ghost" style="border-radius:var(--r-full);">Log in</a>
-         <a href="register.html" class="btn btn-sm btn-primary">Sign up</a>
+         <a href="login.html" class="btn btn-sm btn-ghost nav-login-link">Login</a>
+         <a href="register.html" class="btn btn-sm nav-signup-btn">Sign Up</a>
        </div>`;
 
   return `

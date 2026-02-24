@@ -132,9 +132,17 @@
 
                 <!-- Filters -->
                 <div class="filter-row animate-in">
-                    <input class="form-input" type="text" id="searchCoach" placeholder="🔍 Search by name..."
-                        oninput="filterCoaches()">
-                    <select class="form-select" id="filterSpecialty" onchange="filterCoaches()">
+                    <input class="form-input" type="text" id="searchCoach" placeholder="🔍 Search coach name..."
+                        oninput="filterCoaches()" aria-label="Search coaches">
+                    <select class="form-select" id="filterSport" onchange="filterCoaches()"
+                        aria-label="Filter by Sport">
+                        <option value="">All Sports</option>
+                        <option value="football" selected>Football</option>
+                        <option value="padel">Padel</option>
+                        <option value="basketball">Basketball</option>
+                    </select>
+                    <select class="form-select" id="filterSpecialty" onchange="filterCoaches()"
+                        aria-label="Filter by Specialty">
                         <option value="">All Specialties</option>
                         <option value="Attack & Finishing">Attack & Finishing</option>
                         <option value="Fitness & Conditioning">Fitness & Conditioning</option>
@@ -143,8 +151,10 @@
                         <option value="Midfield & Passing">Midfield & Passing</option>
                         <option value="General">General</option>
                         <option value="Youth Development">Youth Development</option>
+                        <option value="Padel Fundamentals">Padel Fundamentals</option>
+                        <option value="3pt Shooting">3pt Shooting</option>
                     </select>
-                    <select class="form-select" id="sortCoach" onchange="filterCoaches()">
+                    <select class="form-select" id="sortCoach" onchange="filterCoaches()" aria-label="Sort Coaches">
                         <option value="rating">Sort: Rating ↓</option>
                         <option value="price_low">Sort: Price ↑</option>
                         <option value="price_high">Sort: Price ↓</option>
@@ -172,8 +182,15 @@
     <script>
         initPage('coaches');
 
+        // Check for sport in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('sport')) {
+            document.getElementById('filterSport').value = urlParams.get('sport');
+        }
+
         function filterCoaches() {
             const search = document.getElementById('searchCoach').value.trim().toLowerCase();
+            const sport = document.getElementById('filterSport').value;
             const specialty = document.getElementById('filterSpecialty').value;
             const sort = document.getElementById('sortCoach').value;
 
@@ -182,14 +199,15 @@
                 return { ...c, userName: u ? u.name : 'Coach' };
             });
 
-            console.log("Coaches data:", coaches);
-
             // Filter
             if (search) {
                 coaches = coaches.filter(c =>
                     c.userName.toLowerCase().includes(search) ||
-                    c.specialty.toLowerCase().includes(search)
+                    (c.specialty && c.specialty.toLowerCase().includes(search))
                 );
+            }
+            if (sport) {
+                coaches = coaches.filter(c => (c.sport || 'football') === sport);
             }
             if (specialty) {
                 coaches = coaches.filter(c => c.specialty === specialty);
@@ -219,6 +237,7 @@
                 const coachAcademies = AcademiesStore.filter(a => a.coachId === c.id);
                 const firstAcademy = coachAcademies[0];
                 const currentUser = Auth.getCurrentUser();
+                const sportIcon = (c.sport || 'football') === 'basketball' ? '🏀' : (c.sport || 'football') === 'padel' ? '🎾' : '⚽';
 
                 let enrollmentHtml = '';
                 if (currentUser && firstAcademy) {
@@ -226,16 +245,13 @@
 
                     switch (state) {
                         case EnrollmentStates.PENDING:
-                            enrollmentHtml = `<div class="enrollment-status status-pending">⏳ Waiting Coach Approval</div>`;
+                            enrollmentHtml = `<div class="enrollment-status status-pending">⏳ Waiting Approval</div>`;
                             break;
                         case EnrollmentStates.ACTIVE:
                             enrollmentHtml = `
                                 <div class="enrollment-status status-enrolled">✓ You Enrolled</div>
-                                <a href="academy-dashboard.html?academy=${firstAcademy.id}" class="btn btn-primary btn-sm mt-1">View Academy</a>
+                                <a href="academy-dashboard.html?academy=${firstAcademy.id}" class="btn btn-primary btn-sm mt-1">Dashboard</a>
                             `;
-                            break;
-                        case EnrollmentStates.EXPIRED:
-                            enrollmentHtml = `<a href="coach-booking.html?coach=${c.id}" class="btn btn-error btn-sm">Renew Enrollment</a>`;
                             break;
                         default:
                             enrollmentHtml = `<a href="coach-booking.html?coach=${c.id}" class="btn btn-primary btn-sm">Book Training</a>`;
@@ -248,7 +264,7 @@
 
                 return `
                 <div class="card coach-card animate-in">
-                    <div class="coach-card-avatar">${c.userName.charAt(0).toUpperCase()}</div>
+                    <div class="coach-card-avatar">${sportIcon}</div>
                     <div class="coach-card-info">
                         <h3>${c.userName}</h3>
                         <div class="text-sm c-faint">${c.specialty} · ${c.experience} yrs experience</div>
@@ -256,7 +272,7 @@
                         <p class="text-sm mt-2 c-faint">${c.bio}</p>
                         <div class="coach-tags">
                             <span class="badge badge-info">${c.specialty}</span>
-                            <span class="badge badge-neutral">${totalSessions} session${totalSessions !== 1 ? 's' : ''} completed</span>
+                            <span class="badge badge-neutral">${totalSessions} sessions completed</span>
                             ${coachAcademies.length > 0 ? `<span class="badge badge-primary">🎓 ${coachAcademies.length} Academy</span>` : ''}
                         </div>
                     </div>
